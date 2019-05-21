@@ -30,13 +30,16 @@ make install
 ```
 After installing restart gnome-shell and enable the newly added extension.
 
-**Before using this Add-on** you also **must** install some additional npm packages.
+**Before using this Add-on** you also **must** install some additional npm packages.<br>
 Go to `Cast Settings -> Modules` and click `Install npm modules` button.<br>
 This step will install additional packages and automatically restart Cast to TV server.
 
 ## How to use
 Launch app from newly added `Link` menu entry in `Cast media` submenu.<br>
 Simply write/paste link to the website containing the requested media content and click `Cast link` button or achieve the same effect even simpler by dragging link into the text field.
+
+## Info for translators
+Translation support is not quite ready yet. Please wait until I finish it.
 
 ## Donation
 If you like my work please support it by buying me a cup of coffee :grin:

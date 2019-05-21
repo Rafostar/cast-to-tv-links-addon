@@ -20,7 +20,7 @@ let timeout;
 
 function init()
 {
-	Convenience.initTranslations();
+	//Convenience.initTranslations();
 }
 
 function enable()
