@@ -1,6 +1,7 @@
 # Cast to TV Links Add-on
 [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=TFVDFD88KQ322)
 [![Donate](https://img.shields.io/badge/Donate-PayPal.Me-lightgrey.svg)](https://www.paypal.me/Rafostar)
+[![Crowdin](https://d322cqt584bo4o.cloudfront.net/cast-to-tv/localized.svg)](https://crowdin.com/project/cast-to-tv)
 
 Web links casting support for GNOME Shell Extension Cast to TV.
 
@@ -10,6 +11,7 @@ Web links casting support for GNOME Shell Extension Cast to TV.
 
 ## Features
 * Cast videos, music and pictures from internet
+* All [youtube-dl compatible sites](https://ytdl-org.github.io/youtube-dl/supportedsites.html) are supported
 * Supports captions
 * Constant video quality throughout playback
 * No commercials
@@ -39,7 +41,8 @@ Launch app from newly added `Link` menu entry in `Cast media` submenu.<br>
 Simply write/paste link to the website containing the requested media content and click `Cast link` button or achieve the same effect even simpler by dragging link into the text field.
 
 ## Info for translators
-Translation support is not quite ready yet. Please wait until I finish it.
+All translatable files are in the main extension.<br>
+Preferred translation method is to use [Cast to TV Crowdin](https://crowdin.com/project/cast-to-tv) web page.
 
 ## Donation
 If you like my work please support it by buying me a cup of coffee :grin:
