@@ -37,7 +37,7 @@ exports.fileStream = function(req, res)
 	}
 
 	if(selection.videoSrc && selection.audioSrc) mediaMerge(true).pipe(res);
-	else if(selection.streamType == 'VIDEO_ENCODE') mediaMerge(false).pipe(res);
+	else if(selection.mediaSrc && selection.streamType == 'VIDEO_ENCODE') mediaMerge(false).pipe(res);
 	else if(selection.mediaSrc) req.pipe(request.get(selection.mediaSrc)).pipe(res);
 	else res.sendStatus(404);
 
