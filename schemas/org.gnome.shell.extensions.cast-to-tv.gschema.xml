@@ -1,0 +1,32 @@
+<schemalist gettext-domain="cast-to-tv-links-addon">
+  <schema id="org.gnome.shell.extensions.cast-to-tv-links-addon" path="/org/gnome/shell/extensions/cast-to-tv-links-addon/">
+    <key name="ytdl-mode" type="s">
+      <default>"separate"</default>
+      <summary>Preferred youtube-dl content</summary>
+    </key>
+    <key name="ytdl-path" type="s">
+      <default>""</default>
+      <summary>Custom path to youtube-dl</summary>
+    </key>
+    <key name="max-quality" type="s">
+      <default>"1080p"</default>
+      <summary>Maximal allowed video resolution</summary>
+    </key>
+    <key name="max-fps" type="s">
+      <default>"30"</default>
+      <summary>Maximal allowed video framerate</summary>
+    </key>
+    <key name="allow-vp9" type="b">
+      <default>false</default>
+      <summary>Allow VP9 video codec</summary>
+    </key>
+    <key name="preferred-lang" type="s">
+      <default>""</default>
+      <summary>Primary subtitles language</summary>
+    </key>
+    <key name="fallback-lang" type="s">
+      <default>""</default>
+      <summary>Second best choice for subtitles language</summary>
+    </key>
+  </schema>
+</schemalist>

@@ -1,0 +1,27 @@
+{
+  "name": "cast-to-tv-links-addon",
+  "description": "Web links casting support for GNOME Shell Extension Cast to TV.",
+  "author": "Rafostar",
+  "license": "GPL-2.0",
+  "dependencies": {
+    "JSONStream": "^1.3.5",
+    "debug": "^4.1.1",
+    "request": "^2.88.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rafostar/cast-to-tv-links-addon.git"
+  },
+  "keywords": [
+    "gnome-shell-extension",
+    "chromecast",
+    "media",
+    "video",
+    "stream",
+    "cast"
+  ],
+  "bugs": {
+    "url": "https://github.com/Rafostar/cast-to-tv-links-addon/issues"
+  },
+  "homepage": "https://github.com/Rafostar/cast-to-tv-links-addon"
+}
