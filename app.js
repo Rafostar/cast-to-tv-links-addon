@@ -11,7 +11,7 @@ imports.searchPath.unshift(mainPath);
 const shared = imports.shared.module.exports;
 const tempDir = shared.tempDir + '/links-addon';
 const encodeFormats = readFromFile(localPath + '/encode-formats.json');
-Gettext.bindtextdomain(MetadataDomain, localPath + '/locale');
+Gettext.bindtextdomain(MetadataDomain, mainPath + '/locale_addons/cast-to-tv-links-addon');
 
 class linkEntry
 {
@@ -28,8 +28,8 @@ class linkEntry
 
 	_onActivate()
 	{
-		this.castButton.grab_focus();
-		this.window.show_all();
+		if(this.castButton) this.castButton.grab_focus();
+		if(this.window) this.window.show_all();
 	}
 
 	_buildUI()
