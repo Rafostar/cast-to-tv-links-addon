@@ -1,2 +1,44 @@
-# cast-to-tv-links-addon
+# Cast to TV Links Add-on
+[![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=TFVDFD88KQ322)
+[![Donate](https://img.shields.io/badge/Donate-PayPal.Me-lightgrey.svg)](https://www.paypal.me/Rafostar)
+
 Web links casting support for GNOME Shell Extension Cast to TV.
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/wiki/Rafostar/gnome-shell-extension-cast-to-tv/images/Add-ons/Links.png" width="80%" height="80%">
+</p>
+
+## Features
+* Cast videos, music and pictures from internet
+* Supports captions
+* Constant video quality throughout playback
+* No commercials
+* Does not require Chrome/Chromium browser
+
+## Requirements
+* [Cast to TV](https://github.com/Rafostar/gnome-shell-extension-cast-to-tv) (version 9 or later)
+* [youtube-dl](https://ytdl-org.github.io/youtube-dl/index.html)
+
+Always use the newest possible youtube-dl version.
+
+## Installation
+```
+cd /tmp
+git clone https://github.com/Rafostar/cast-to-tv-links-addon.git
+cd cast-to-tv-links-addon
+make install
+```
+After installing restart gnome-shell and enable the newly added extension.
+
+**Before using this Add-on** you also **must** install some additional npm packages.
+Go to `Cast Settings -> Modules` and click `Install npm modules` button.<br>
+This step will install additional packages and automatically restart Cast to TV server.
+
+## How to use
+Launch app from newly added `Link` menu entry in `Cast media` submenu.<br>
+Simply write/paste link to the website containing the requested media content and click `Cast link` button or achieve the same effect even simpler by dragging link into the text field.
+
+## Donation
+If you like my work please support it by buying me a cup of coffee :grin:
+
+[![PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=TFVDFD88KQ322)
