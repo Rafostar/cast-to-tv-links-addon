@@ -24,7 +24,6 @@ zip-file: _build
 
 # Build and install #
 install: zip-file
-	mkdir -p $(INSTALLPATH)
 	mkdir -p $(INSTALLPATH)/$(UUID)
 	unzip -qo $(UUID).zip -d $(INSTALLPATH)/$(UUID)
 
