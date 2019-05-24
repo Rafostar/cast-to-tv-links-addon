@@ -7,6 +7,10 @@ assignees: ''
 
 ---
 
-<b>Works with youtube-dl from command line:</b> yes/no
-<b>Used youtube-dl version:</b> check with `youtube-dl --version`
+<b>Works with youtube-dl from command line:</b>
+Yes/No
+
+<b>Used youtube-dl version:</b>
+Output of `youtube-dl --version`
+
 <b>Example link to video:</b>
