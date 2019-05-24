@@ -45,8 +45,8 @@ function enable()
 					if(castMenu.isServiceEnabled === false) addonMenuItem.actor.hide();
 				}
 
-				if(castMenu.serviceMenuItem) Addons.setLastMenuItem(castMenu, castMenu.serviceMenuItem);
-				if(castMenu.settingsMenuItem) Addons.setLastMenuItem(castMenu, castMenu.settingsMenuItem);
+				if(typeof castMenu.serviceMenuItem !== 'undefined') Addons.setLastMenuItem(castMenu, castMenu.serviceMenuItem);
+				if(typeof castMenu.settingsMenuItem !== 'undefined') Addons.setLastMenuItem(castMenu, castMenu.settingsMenuItem);
 			}
 
 			return GLib.SOURCE_REMOVE;
