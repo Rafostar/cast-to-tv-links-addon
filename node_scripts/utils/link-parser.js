@@ -167,8 +167,11 @@ function parseLink(Url, opts)
 			{
 				var isPicture = (
 					data.ext == 'bmp'
+					|| data.ext == 'gif'
 					|| data.ext == 'jpeg'
+					|| data.ext == 'jpg'
 					|| data.ext == 'png'
+					|| data.ext == 'webp'
 				);
 
 				if(data.url && isPicture)

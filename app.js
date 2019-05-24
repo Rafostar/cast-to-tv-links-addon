@@ -420,6 +420,7 @@ class linkEntry
 			mediaInfo.container == 'bmp'
 			|| mediaInfo.container == 'gif'
 			|| mediaInfo.container == 'jpeg'
+			|| mediaInfo.container == 'jpg'
 			|| mediaInfo.container == 'png'
 			|| mediaInfo.container == 'webp'
 		);
