@@ -64,7 +64,7 @@ function disable()
 		let lockingScreen = (Main.sessionMode.currentMode == 'unlock-dialog'
 			|| Main.sessionMode.currentMode == 'lock-screen');
 
-		if(!lockingScreen) Addons.setLastMenuItem(castMenu, addonMenuItem);
+		if(!lockingScreen && castMenu) Addons.setLastMenuItem(castMenu, addonMenuItem);
 
 		addonMenuItem.destroy();
 	}
