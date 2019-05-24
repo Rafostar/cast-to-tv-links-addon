@@ -69,7 +69,6 @@ function disable()
 		addonMenuItem.destroy();
 	}
 
-	castMenu = null;
 	addonMenuItem = null;
 	timeout = null;
 }
