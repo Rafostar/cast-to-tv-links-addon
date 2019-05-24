@@ -67,14 +67,18 @@ exports.coverStream = function(req, res)
 
 function mediaMerge(isSeparate)
 {
+	var format = 'matroska';
+	if(!isSeparate) format = 'mp4';
+
 	var mergeOpts = [
+	'-movflags', 'empty_moov',
 	'-c', 'copy',
-	'-f', 'matroska',
+	'-f', format,
 	'pipe:1'
 	];
 
 	if(isSeparate) mergeOpts.unshift('-i', 'async:cache:' + selection.videoSrc, '-i', 'async:cache:' + selection.audioSrc);
-	else mergeOpts.unshift('-i', 'async:cache:' + selection.mediaSrc);
+	else mergeOpts.unshift('-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
 
 	streamProcess = spawn(config.ffmpegPath, mergeOpts,
 	{ stdio: ['ignore', 'pipe', 'ignore'] });
