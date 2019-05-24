@@ -40,7 +40,11 @@ function enable()
 				addonMenuItem = new Widget.addonMenuItem();
 				castMenu.castSubMenu.menu.addMenuItem(addonMenuItem);
 
-				if(castMenu.isServiceEnabled === false) addonMenuItem.actor.hide();
+				if(typeof castMenu.isServiceEnabled !== 'undefined')
+				{
+					if(castMenu.isServiceEnabled === false) addonMenuItem.actor.hide();
+				}
+
 				if(castMenu.serviceMenuItem) Addons.setLastMenuItem(castMenu, castMenu.serviceMenuItem);
 				if(castMenu.settingsMenuItem) Addons.setLastMenuItem(castMenu, castMenu.settingsMenuItem);
 			}
