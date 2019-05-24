@@ -1,5 +1,9 @@
 [
  "http_dash_segments",
+ "m3u8",
  "m3u8_native",
- "f4m"
+ "f4m",
+ "rtsp",
+ "rtmp",
+ "rtmpe"
 ]
