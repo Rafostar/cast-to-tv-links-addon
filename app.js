@@ -366,7 +366,9 @@ class linkEntry
 			addon: 'LINKS',
 			title: mediaInfo.title,
 			filePath: mediaInfo.title,
-			coverSrc: this.imagePath
+			coverSrc: this.imagePath,
+			height: mediaInfo.height,
+			fps: mediaInfo.fps
 		};
 
 		if(mediaInfo.url)

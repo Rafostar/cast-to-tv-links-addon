@@ -144,6 +144,16 @@ function parseLink(Url, opts)
 		else if(data.height) info.resolution = data.height;
 
 		if(info.resolution && data.fps) info.resolution += '@' + data.fps;
+
+		info.height = {
+			expected: parseInt(opts.quality.slice(0, -1)),
+			actual: (data.height || 0)
+		}
+
+		info.fps = {
+			expected: parseInt(opts.fps),
+			actual: (data.fps || 0)
+		}
 	}
 
 	youtubedl.stdout
