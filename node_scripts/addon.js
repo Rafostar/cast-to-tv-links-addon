@@ -57,13 +57,19 @@ exports.fileStream = function(req, res)
 		if(selection.videoSrc && selection.audioSrc) mediaMerge(true).pipe(res);
 		else if(selection.mediaSrc && selection.streamType == 'VIDEO_ENCODE') mediaMerge(false).pipe(res);
 		else if(selection.mediaSrc) req.pipe(request.get(selection.mediaSrc)).pipe(res);
-		else res.sendStatus(404);
+		else return res.sendStatus(404);
 	}
 	else
 	{
-		if(selection.videoSrc && selection.audioSrc) videoEncode(true).pipe(res);
-		else if(selection.mediaSrc) videoEncode(false).pipe(res);
-		else res.sendStatus(404);
+		var isSeparate;
+
+		if(selection.videoSrc && selection.audioSrc) isSeparate = true;
+		else if(selection.mediaSrc) isSeparate = false;
+		else return res.sendStatus(404);
+
+		if(config.videoAcceleration == 'none') videoEncode(isSeparate).pipe(res);
+		else if(config.videoAcceleration == 'vaapi') vaapiEncode(isSeparate).pipe(res);
+		else return res.end();
 	}
 
 	req.on('close', () =>
@@ -161,8 +167,7 @@ function videoEncode(isSeparate)
 	var encodeOpts = [
 	'-movflags', '+empty_moov',
 	'-c:v', 'libx264',
-	'-vf',
-	'fps=fps=30',
+	'-vf', 'fps=30',
 	'-pix_fmt', 'yuv420p',
 	'-preset', 'superfast',
 	'-level:v', '4.1',
@@ -176,6 +181,37 @@ function videoEncode(isSeparate)
 
 	if(isSeparate) encodeOpts.unshift('-i', 'async:cache:' + selection.videoSrc, '-i', 'async:cache:' + selection.audioSrc);
 	else encodeOpts.unshift('-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
+
+	streamProcess = spawn(config.ffmpegPath, encodeOpts,
+	{ stdio: ['ignore', 'pipe', 'ignore'] });
+
+	streamProcess.once('close', () => streamProcess = null);
+
+	return streamProcess.stdout;
+}
+
+function vaapiEncode(isSeparate)
+{
+	var format = 'matroska';
+	if(!isSeparate) format = 'mp4';
+
+	var encodeOpts = [
+	'-movflags', '+empty_moov',
+	'-c:v', 'h264_vaapi',
+	'-vf', 'fps=30,format=nv12,hwmap',
+	'-level:v', '4.1',
+	'-b:v', config.videoBitrate + 'M',
+	'-maxrate', config.videoBitrate + 'M',
+	'-c:a', 'copy',
+	'-metadata', 'title=Cast to TV - VAAPI Encoded Stream',
+	'-f', format,
+	'pipe:1'
+	];
+
+	if(isSeparate) encodeOpts.unshift('-i', 'async:cache:' + selection.videoSrc, '-i', 'async:cache:' + selection.audioSrc);
+	else encodeOpts.unshift('-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
+
+	encodeOpts.unshift('-vaapi_device', '/dev/dri/renderD128');
 
 	streamProcess = spawn(config.ffmpegPath, encodeOpts,
 	{ stdio: ['ignore', 'pipe', 'ignore'] });
