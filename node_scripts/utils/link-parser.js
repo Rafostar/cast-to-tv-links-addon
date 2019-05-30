@@ -154,8 +154,7 @@ function parseLink(Url, opts)
 
 			info = {
 				title: data.title,
-				container: data.ext,
-				protocol: data.protocol
+				container: data.ext
 			};
 
 			if(data.thumbnail)
@@ -189,6 +188,7 @@ function parseLink(Url, opts)
 				if(data.vcodec && data.vcodec != 'none') info.vcodec = data.vcodec;
 
 				info.url = data.url;
+				info.protocol = data.protocol;
 			}
 			else
 			{
@@ -200,6 +200,7 @@ function parseLink(Url, opts)
 
 						info.vcodec = format.vcodec;
 						info.videoUrl = format.url;
+						info.protocol = format.protocol;
 					}
 					else if(format.acodec && format.acodec != 'none')
 					{
