@@ -251,6 +251,15 @@ class linkEntry
 			expand: false,
 			halign: Gtk.Align.END
 		});
+
+		this.linkEntry.connect('activate', () =>
+		{
+			if(this.castButton.get_sensitive())
+			{
+				this.castButton.clicked();
+			}
+		});
+
 		this.castButton.connect('clicked', () => this._getInfo());
 
 		box.pack_start(this.linkEntry, true, true, 0);
