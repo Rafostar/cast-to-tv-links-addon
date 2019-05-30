@@ -21,6 +21,14 @@ exports.closeStream = function()
 
 exports.fileStream = function(req, res)
 {
+	/* Prevent spawning more then one ffmpeg encode process */
+	if(streamProcess)
+	{
+		res.statusCode = 429;
+		res.end();
+		return;
+	}
+
 	res.setHeader('Access-Control-Allow-Origin', '*');
 
 	/* Set content type only when using local media merging,
@@ -140,6 +148,8 @@ function mediaMerge(isSeparate)
 	streamProcess = spawn(config.ffmpegPath, mergeOpts,
 	{ stdio: ['ignore', 'pipe', 'ignore'] });
 
+	streamProcess.once('close', () => streamProcess = null);
+
 	return streamProcess.stdout;
 }
 
@@ -169,6 +179,8 @@ function videoEncode(isSeparate)
 
 	streamProcess = spawn(config.ffmpegPath, encodeOpts,
 	{ stdio: ['ignore', 'pipe', 'ignore'] });
+
+	streamProcess.once('close', () => streamProcess = null);
 
 	return streamProcess.stdout;
 }
