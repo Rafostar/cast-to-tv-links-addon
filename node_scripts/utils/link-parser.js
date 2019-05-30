@@ -125,7 +125,7 @@ function parseLink(Url, opts)
 	else format = `bestvideo${params}${fps}+bestaudio/bestvideo${params}+bestaudio/${bestAll}`;
 
 	parser_debug(`Requested ytdl format: ${format}`);
-	var youtubedl = spawn(opts.path, ['--ignore-config', '--all-subs', '--playlist-end', '1', '-f', format, '-j', Url]);
+	var youtubedl = spawn(opts.path, ['--ignore-config', '--socket-timeout', '3', '--all-subs', '--playlist-end', '1', '-f', format, '-j', Url]);
 
 	youtubedl.once('close', (code) =>
 	{
