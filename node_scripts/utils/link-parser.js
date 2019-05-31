@@ -94,6 +94,9 @@ function parseLink(Url, opts)
 			break;
 	}
 
+	/* Disallow AV1 codec */
+	params += '[vcodec!^=av01]';
+
 	/* Stdout returns char to string, not bool */
 	if(opts.vp9 != 'true') params += '[vcodec!^=vp9]';
 
