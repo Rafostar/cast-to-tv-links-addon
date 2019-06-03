@@ -8,11 +8,12 @@ const GLib = imports.gi.GLib;
 const Main = imports.ui.main;
 const Gettext = imports.gettext;
 const Local = imports.misc.extensionUtils.getCurrentExtension();
-const Widget = Local.imports.widget;
 const extensionsPath = Local.path.substring(0, Local.path.lastIndexOf('/'));
 const mainPath = extensionsPath + '/cast-to-tv@rafostar.github.com';
 const localePath = mainPath + '/locale_addons/cast-to-tv-links-addon';
+
 imports.searchPath.unshift(mainPath);
+const Widget = Local.imports.widget;
 const Addons = imports.addons;
 
 let castMenu;

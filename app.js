@@ -7,11 +7,12 @@ const _ = GettextDomain.gettext;
 const extensionsPath = GLib.get_home_dir() + '/.local/share/gnome-shell/extensions';
 const mainPath = extensionsPath + '/cast-to-tv@rafostar.github.com';
 const localPath = extensionsPath + '/cast-to-tv-links-addon@rafostar.github.com';
+Gettext.bindtextdomain(MetadataDomain, mainPath + '/locale_addons/cast-to-tv-links-addon');
+
 imports.searchPath.unshift(mainPath);
 const shared = imports.shared.module.exports;
 const tempDir = shared.tempDir + '/links-addon';
 const encodeFormats = readFromFile(localPath + '/encode-formats.json');
-Gettext.bindtextdomain(MetadataDomain, mainPath + '/locale_addons/cast-to-tv-links-addon');
 
 class linkEntry
 {
