@@ -28,6 +28,7 @@ else
 
 var linkOpts = {
 	path: getPath(),
+	mode: getSetting('ytdl-mode'),
 	quality: getSetting('max-quality'),
 	fps: getSetting('max-fps'),
 	vp9: getSetting('allow-vp9')
@@ -72,13 +73,24 @@ function getSubs(data, lang)
 	return null;
 }
 
+function checkUrl(url)
+{
+	return new Promise((resolve) =>
+	{
+		request.head(url, (error, response) =>
+		{
+			if(response.statusCode == 404) resolve(true);
+			else resolve(false);
+		});
+	});
+}
+
 function parseLink(Url, opts)
 {
 	var info;
 	var format;
 	var params;
 	var fps;
-	var mode = getSetting('ytdl-mode');
 
 	switch(opts.quality)
 	{
@@ -124,14 +136,33 @@ function parseLink(Url, opts)
 	var bestSeekable = `best${params}${fps}${disallowed}/best${params}${disallowed}/best${disallowed}/best`;
 	var bestAll = `best${params}${fps}/best${params}/best`;
 
-	if(mode == 'combined') format = bestSeekable;
+	if(opts.mode == 'combined') format = bestSeekable;
 	else format = `bestvideo${params}${fps}+bestaudio/bestvideo${params}+bestaudio/${bestAll}`;
 
 	parser_debug(`Requested ytdl format: ${format}`);
 	var youtubedl = spawn(opts.path, ['--ignore-config', '--socket-timeout', '3', '--all-subs', '--playlist-end', '1', '-f', format, '-j', Url]);
 
-	youtubedl.once('close', (code) =>
+	youtubedl.once('close', async(code) =>
 	{
+		if(info.protocol == 'http_dash_segments')
+		{
+			var testUrl = (info.videoUrl || info.url);
+			var isInvalid = await checkUrl(testUrl);
+
+			if(isInvalid)
+			{
+				if(linkOpts.mode != 'combined')
+				{
+					linkOpts.mode = 'combined';
+					return parseLink(link, linkOpts);
+				}
+				else
+				{
+					return process.exit(1);
+				}
+			}
+		}
+
 		if(code) parser_debug(`Error code: ${code}`);
 		else if(!parser_debug.enabled && !ytdl_debug.enabled) console.log(JSON.stringify(info));
 		else
