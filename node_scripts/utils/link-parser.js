@@ -205,6 +205,18 @@ function parseLink(Url, opts)
 			}
 			else
 			{
+				var getUrl = (format) =>
+				{
+					if(	typeof format.manifest_url !== 'undefined'
+						&& typeof format.fragment_base_url !== 'undefined'
+					) {
+						if(format.manifest_url == format.url)
+							return format.fragment_base_url;
+					}
+
+					return format.url;
+				}
+
 				data.requested_formats.forEach(format =>
 				{
 					if(format.vcodec && format.vcodec != 'none')
@@ -212,13 +224,13 @@ function parseLink(Url, opts)
 						setResolution(data);
 
 						info.vcodec = format.vcodec;
-						info.videoUrl = format.url;
+						info.videoUrl = getUrl(format);
 						info.protocol = format.protocol;
 					}
 					else if(format.acodec && format.acodec != 'none')
 					{
 						info.acodec = format.acodec;
-						info.audioUrl = format.url;
+						info.audioUrl = getUrl(format);
 					}
 				});
 			}
