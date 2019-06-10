@@ -2,10 +2,14 @@ var fs = require('fs');
 var ffprobe = require('./ffprobe-sync');
 var { spawn } = require('child_process');
 var request = require('request');
+var debug = require('debug');
+var links_debug = debug('links-addon');
+var ffmpeg_debug = debug('ffmpeg');
 
 var config;
 var selection;
 var streamProcess;
+var stdioConf = 'ignore';
 
 const downloadOpts = [
 	'-multiple_requests', '1',
@@ -20,12 +24,19 @@ exports.handleSelection = function(selectionContents, configContents)
 {
 	config = configContents;
 	selection = selectionContents;
+
+	links_debug(`Obtained config: ${JSON.stringify(config)}`);
+	links_debug(`Obtained selection: ${JSON.stringify(selection)}`);
+
+	if(ffmpeg_debug.enabled) stdioConf = 'inherit';
 }
 
 exports.closeStream = function()
 {
 	config = null;
 	selection = null;
+
+	links_debug('Stream closed. Config and selection data wiped');
 }
 
 exports.fileStream = function(req, res)
@@ -33,6 +44,7 @@ exports.fileStream = function(req, res)
 	/* Prevent spawning more then one ffmpeg encode process */
 	if(streamProcess)
 	{
+		links_debug('Stream in progress. Send status 429');
 		res.statusCode = 429;
 		res.end();
 		return;
@@ -85,6 +97,8 @@ exports.fileStream = function(req, res)
 	{
 		try { process.kill(streamProcess.pid, 'SIGHUP'); }
 		catch(err) {}
+
+		links_debug('Killed stream process');
 	});
 }
 
@@ -101,8 +115,16 @@ exports.coverStream = function(req, res)
 
 	var exist = fs.existsSync(selection.coverSrc);
 
-	if(exist) return fs.createReadStream(selection.coverSrc).pipe(res);
-	else res.sendStatus(204);
+	if(exist)
+	{
+		links_debug('Sending found media cover');
+		return fs.createReadStream(selection.coverSrc).pipe(res);
+	}
+	else
+	{
+		links_debug('Cover not found. Send status 204');
+		res.sendStatus(204);
+	}
 }
 
 function detectTranscoding()
@@ -139,9 +161,11 @@ function detectTranscoding()
 	if(	selection.fps.actual > selection.fps.expected
 		&& selection.height.actual >= selection.height.expected
 	) {
+		links_debug('Media needs transcoding');
 		return true;
 	}
 
+	links_debug('No transcoding is needed');
 	return false;
 }
 
@@ -161,11 +185,19 @@ function mediaMerge(isSeparate)
 	else mergeOpts.unshift('-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
 
 	mergeOpts = [...downloadOpts, ...mergeOpts];
+	links_debug(`Starting ffmpeg with opts: ${JSON.stringify(mergeOpts)}`);
 
 	streamProcess = spawn(config.ffmpegPath, mergeOpts,
-	{ stdio: ['ignore', 'pipe', 'ignore'] });
+	{ stdio: [stdioConf, 'pipe', stdioConf] });
 
-	streamProcess.once('close', () => streamProcess = null);
+	streamProcess.once('close', (code) =>
+	{
+		if(code !== null) links_debug(`FFmpeg exited with code: ${code}`);
+		streamProcess = null;
+		links_debug('Stream process wiped');
+	});
+
+	streamProcess.once('error', (error) => links_debug(error));
 
 	return streamProcess.stdout;
 }
@@ -194,11 +226,19 @@ function videoEncode(isSeparate)
 	else encodeOpts.unshift('-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
 
 	encodeOpts = [...downloadOpts, ...encodeOpts];
+	links_debug(`Starting ffmpeg with opts: ${JSON.stringify(encodeOpts)}`);
 
 	streamProcess = spawn(config.ffmpegPath, encodeOpts,
-	{ stdio: ['ignore', 'pipe', 'ignore'] });
+	{ stdio: [stdioConf, 'pipe', stdioConf] });
 
-	streamProcess.once('close', () => streamProcess = null);
+	streamProcess.once('close', (code) =>
+	{
+		if(code !== null) links_debug(`FFmpeg exited with code: ${code}`);
+		streamProcess = null;
+		links_debug('Stream process wiped');
+	});
+
+	streamProcess.once('error', (error) => links_debug(error));
 
 	return streamProcess.stdout;
 }
@@ -226,11 +266,19 @@ function vaapiEncode(isSeparate)
 
 	encodeOpts = [...downloadOpts, ...encodeOpts];
 	encodeOpts.unshift('-vaapi_device', '/dev/dri/renderD128');
+	links_debug(`Starting ffmpeg with opts: ${JSON.stringify(encodeOpts)}`);
 
 	streamProcess = spawn(config.ffmpegPath, encodeOpts,
-	{ stdio: ['ignore', 'pipe', 'ignore'] });
+	{ stdio: [stdioConf, 'pipe', stdioConf] });
 
-	streamProcess.once('close', () => streamProcess = null);
+	streamProcess.once('close', (code) =>
+	{
+		if(code !== null) links_debug(`FFmpeg exited with code: ${code}`);
+		streamProcess = null;
+		links_debug('Stream process wiped');
+	});
+
+	streamProcess.once('error', (error) => links_debug(error));
 
 	return streamProcess.stdout;
 }
