@@ -7,6 +7,15 @@ var config;
 var selection;
 var streamProcess;
 
+const downloadOpts = [
+	'-multiple_requests', '1',
+	'-seekable', '1',
+	'-timeout', '100000',
+	'-reconnect', '1',
+	'-reconnect_streamed', '1',
+	'-reconnect_at_eof', '1'
+];
+
 exports.handleSelection = function(selectionContents, configContents)
 {
 	config = configContents;
@@ -151,6 +160,8 @@ function mediaMerge(isSeparate)
 	if(isSeparate) mergeOpts.unshift('-i', 'async:cache:' + selection.videoSrc, '-i', 'async:cache:' + selection.audioSrc);
 	else mergeOpts.unshift('-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
 
+	mergeOpts = [...downloadOpts, ...mergeOpts];
+
 	streamProcess = spawn(config.ffmpegPath, mergeOpts,
 	{ stdio: ['ignore', 'pipe', 'ignore'] });
 
@@ -182,6 +193,8 @@ function videoEncode(isSeparate)
 	if(isSeparate) encodeOpts.unshift('-i', 'async:cache:' + selection.videoSrc, '-i', 'async:cache:' + selection.audioSrc);
 	else encodeOpts.unshift('-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
 
+	encodeOpts = [...downloadOpts, ...encodeOpts];
+
 	streamProcess = spawn(config.ffmpegPath, encodeOpts,
 	{ stdio: ['ignore', 'pipe', 'ignore'] });
 
@@ -211,6 +224,7 @@ function vaapiEncode(isSeparate)
 	if(isSeparate) encodeOpts.unshift('-i', 'async:cache:' + selection.videoSrc, '-i', 'async:cache:' + selection.audioSrc);
 	else encodeOpts.unshift('-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
 
+	encodeOpts = [...downloadOpts, ...encodeOpts];
 	encodeOpts.unshift('-vaapi_device', '/dev/dri/renderD128');
 
 	streamProcess = spawn(config.ffmpegPath, encodeOpts,
