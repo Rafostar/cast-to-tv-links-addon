@@ -9,7 +9,9 @@ var ffmpeg_debug = debug('ffmpeg');
 var config;
 var selection;
 var streamProcess;
+
 var stdioConf = 'ignore';
+if(ffmpeg_debug.enabled) stdioConf = 'inherit';
 
 const downloadOpts = [
 	'-multiple_requests', '1',
@@ -28,8 +30,6 @@ exports.handleSelection = function(selectionContents, configContents)
 
 	links_debug(`Obtained config: ${JSON.stringify(config)}`);
 	links_debug(`Obtained selection: ${JSON.stringify(selection)}`);
-
-	if(ffmpeg_debug.enabled) stdioConf = 'inherit';
 }
 
 exports.closeStream = function()
@@ -189,7 +189,7 @@ function mediaMerge(isSeparate)
 	links_debug(`Starting ffmpeg with opts: ${JSON.stringify(mergeOpts)}`);
 
 	streamProcess = spawn(config.ffmpegPath, mergeOpts,
-	{ stdio: [stdioConf, 'pipe', stdioConf] });
+	{ stdio: ['ignore', 'pipe', stdioConf] });
 
 	streamProcess.once('close', (code) =>
 	{
@@ -230,7 +230,7 @@ function videoEncode(isSeparate)
 	links_debug(`Starting ffmpeg with opts: ${JSON.stringify(encodeOpts)}`);
 
 	streamProcess = spawn(config.ffmpegPath, encodeOpts,
-	{ stdio: [stdioConf, 'pipe', stdioConf] });
+	{ stdio: ['ignore', 'pipe', stdioConf] });
 
 	streamProcess.once('close', (code) =>
 	{
@@ -270,7 +270,7 @@ function vaapiEncode(isSeparate)
 	links_debug(`Starting ffmpeg with opts: ${JSON.stringify(encodeOpts)}`);
 
 	streamProcess = spawn(config.ffmpegPath, encodeOpts,
-	{ stdio: [stdioConf, 'pipe', stdioConf] });
+	{ stdio: ['ignore', 'pipe', stdioConf] });
 
 	streamProcess.once('close', (code) =>
 	{
