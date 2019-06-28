@@ -144,6 +144,9 @@ function parseLink(Url, opts)
 
 	youtubedl.once('close', async(code) =>
 	{
+		if(code !== 0) return parser_debug(`youtube-dl error code: ${code}`);
+		else if(!info) return parser_debug(`Unable to obtain link info!`);
+
 		if(info.protocol == 'http_dash_segments')
 		{
 			var testUrl = (info.videoUrl || info.url);
@@ -163,11 +166,10 @@ function parseLink(Url, opts)
 			}
 		}
 
-		if(code) parser_debug(`Error code: ${code}`);
-		else if(!parser_debug.enabled && !ytdl_debug.enabled) console.log(JSON.stringify(info));
+		if(!parser_debug.enabled && !ytdl_debug.enabled) console.log(JSON.stringify(info));
 		else
 		{
-			parser_debug('\nSELECTED INFO');
+			parser_debug('\nSELECTED INFO:');
 			parser_debug(info);
 		}
 	});
