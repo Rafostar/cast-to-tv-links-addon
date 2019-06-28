@@ -14,7 +14,8 @@ var stdioConf = 'ignore';
 if(ffmpeg_debug.enabled) stdioConf = 'inherit';
 
 const downloadOpts = [
-	'-multiple_requests', '1',
+	'-user_agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36',
+	'-multiple_requests', '0',
 	'-seekable', '1',
 	'-timeout', '100000',
 	'-reconnect', '1',
