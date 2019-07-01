@@ -82,11 +82,31 @@ class linkEntry
 		return body;
 	}
 
+	_addInfoItem(text, destBox)
+	{
+		let hbox = new Gtk.HBox();
+		let label = new Gtk.Label({
+			label: text,
+			expand: false,
+			halign: Gtk.Align.START
+		});
+		let infoLabel = new Gtk.Label({
+			label: "-",
+			use_markup: true,
+			expand: false,
+			halign: Gtk.Align.START,
+			margin_left: 4
+		});
+		infoLabel.set_ellipsize(Pango.EllipsizeMode.END);
+		hbox.pack_start(label, false, false, 0);
+		hbox.pack_start(infoLabel, false, false, 0);
+		destBox.pack_start(hbox, false, false, 0);
+
+		return infoLabel;
+	}
+
 	_makeInfoBox()
 	{
-		let label = null;
-		let hbox = null;
-
 		let vbox = new Gtk.VBox({ spacing: 6, valign: Gtk.Align.CENTER });
 
 		/* Thumbnail Frame */
@@ -113,122 +133,17 @@ class linkEntry
 		this.thumbnail = this.noImageLabel;
 		this.frame.add(this.thumbnail);
 
-		/* Title */
-		hbox = new Gtk.HBox();
-		label = new Gtk.Label({
-			label: _("Title:"),
-			expand: false,
-			halign: Gtk.Align.START
-		});
-		this.mediaTitle = new Gtk.Label({
-			label: "-",
-			use_markup: true,
-			expand: false,
-			halign: Gtk.Align.START,
-			margin_left: 4
-		});
-		this.mediaTitle.set_ellipsize(Pango.EllipsizeMode.END);
-		hbox.pack_start(label, false, false, 0);
-		hbox.pack_start(this.mediaTitle, false, false, 0);
-		vbox.pack_start(hbox, false, false, 0);
-
-		/* Format */
-		hbox = new Gtk.HBox();
-		label = new Gtk.Label({
-			label: _("Format:"),
-			expand: false,
-			halign: Gtk.Align.START
-		});
-		this.container = new Gtk.Label({
-			label: "-",
-			use_markup: true,
-			expand: false,
-			halign: Gtk.Align.START,
-			margin_left: 4
-		});
-		this.container.set_ellipsize(Pango.EllipsizeMode.END);
-		hbox.pack_start(label, false, false, 0);
-		hbox.pack_start(this.container, false, false, 0);
-		vbox.pack_start(hbox, false, false, 0);
-
-		/* Resolution */
-		hbox = new Gtk.HBox();
-		label = new Gtk.Label({
-			label: _("Resolution:"),
-			expand: false,
-			halign: Gtk.Align.START
-		});
-		this.resolution = new Gtk.Label({
-			label: "-",
-			use_markup: true,
-			expand: false,
-			halign: Gtk.Align.START,
-			margin_left: 4
-		});
-		this.resolution.set_ellipsize(Pango.EllipsizeMode.END);
-		hbox.pack_start(label, false, false, 0);
-		hbox.pack_start(this.resolution, false, false, 0);
-		vbox.pack_start(hbox, false, false, 0);
-
-		/* Video codec */
-		hbox = new Gtk.HBox();
-		label = new Gtk.Label({
-			label: _("Video codec:"),
-			expand: false,
-			halign: Gtk.Align.START
-		});
-		this.vcodec = new Gtk.Label({
-			label: "-",
-			use_markup: true,
-			expand: false,
-			halign: Gtk.Align.START,
-			margin_left: 4
-		});
-		this.vcodec.set_ellipsize(Pango.EllipsizeMode.END);
-		hbox.pack_start(label, false, false, 0);
-		hbox.pack_start(this.vcodec, false, false, 0);
-		vbox.pack_start(hbox, false, false, 0);
-
-		/* Audio codec */
-		hbox = new Gtk.HBox();
-		label = new Gtk.Label({
-			label: _("Audio codec:"),
-			expand: false,
-			halign: Gtk.Align.START
-		});
-		this.acodec = new Gtk.Label({
-			label: "-",
-			use_markup: true,
-			expand: false,
-			halign: Gtk.Align.START,
-			margin_left: 4
-		});
-		this.acodec.set_ellipsize(Pango.EllipsizeMode.END);
-		hbox.pack_start(label, false, false, 0);
-		hbox.pack_start(this.acodec, false, false, 0);
-		vbox.pack_start(hbox, false, false, 0);
-
-		/* Subtitles */
-		hbox = new Gtk.HBox();
-		label = new Gtk.Label({
-			label: _("Subtitles:"),
-			expand: false,
-			halign: Gtk.Align.START
-		});
-		this.subs = new Gtk.Label({
-			label: "-",
-			use_markup: true,
-			expand: false,
-			halign: Gtk.Align.START,
-			margin_left: 4
-		});
-		this.subs.set_ellipsize(Pango.EllipsizeMode.END);
-		hbox.pack_start(label, false, false, 0);
-		hbox.pack_start(this.subs, false, false, 0);
-		vbox.pack_start(hbox, false, false, 0);
+		this.infoItems = [
+			this._addInfoItem(_("Title:"), vbox),
+			this._addInfoItem(_("Format:"), vbox),
+			this._addInfoItem(_("Resolution:"), vbox),
+			this._addInfoItem(_("Video codec:"), vbox),
+			this._addInfoItem(_("Audio codec:"), vbox),
+			this._addInfoItem(_("Subtitles:"), vbox)
+		];
 
 		/* Pack widgets in box */
-		hbox = new Gtk.HBox({ spacing: 10, valign: Gtk.Align.CENTER });
+		let hbox = new Gtk.HBox({ spacing: 10, valign: Gtk.Align.CENTER });
 		hbox.pack_start(this.frame, false, false, 0);
 		hbox.pack_start(vbox, false, false, 0);
 
@@ -310,33 +225,29 @@ class linkEntry
 
 	_restoreInfoDefaults()
 	{
-		this.mediaTitle.label = '-';
-		this.container.label = '-';
-		this.resolution.label = '-';
-		this.vcodec.label = '-';
-		this.acodec.label = '-';
-		this.subs.label = '-';
+		this.infoItems.forEach(item => item.label = '-');
 	}
 
 	_fillInfo(mediaInfo)
 	{
-		if(mediaInfo.title) this.mediaTitle.label = '<b>' + mediaInfo.title.replace(/&/g, '&amp;') + '</b>';
-		else this.mediaTitle.label = '-';
+		let mediaLabels = [
+			mediaInfo.title,
+			mediaInfo.container,
+			mediaInfo.resolution,
+			mediaInfo.vcodec,
+			mediaInfo.acodec,
+			mediaInfo.subtitles
+		];
 
-		if(mediaInfo.container) this.container.label = '<b>' + mediaInfo.container + '</b>';
-		else this.container.label = '-';
-
-		if(mediaInfo.resolution) this.resolution.label = '<b>' + mediaInfo.resolution + '</b>';
-		else this.resolution.label = '-';
-
-		if(mediaInfo.vcodec) this.vcodec.label = '<b>' + mediaInfo.vcodec + '</b>';
-		else this.vcodec.label = '-';
-
-		if(mediaInfo.acodec) this.acodec.label = '<b>' + mediaInfo.acodec + '</b>';
-		else this.acodec.label = '-';
-
-		if(mediaInfo.subtitles) this.subs.label = '<b>' + mediaInfo.subtitles.lang + '</b>';
-		else this.subs.label = '-';
+		for(var i = 0; i < this.infoItems.length; i++)
+		{
+			if(mediaLabels[i])
+			{
+				let text = (i === 0) ? mediaLabels[i].replace(/&/g, '&amp;') : mediaLabels[i];
+				if(text.lang) text = text.lang;
+				this.infoItems[i].label = '<b>' + text + '</b>';
+			}
+		}
 
 		if(mediaInfo.thumbnail)
 		{
