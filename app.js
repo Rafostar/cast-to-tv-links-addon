@@ -244,7 +244,8 @@ class linkEntry
 		this.linkEntry.connect('drag_data_received', (widget, context, x, y, selData) =>
 		{
 			this.linkEntry.set_text("");
-			this._getInfo(selData.get_text());
+			if(this.castButton.get_sensitive())
+				this._getInfo(selData.get_text());
 		});
 
 		this.castButton = new Gtk.Button({
@@ -256,9 +257,7 @@ class linkEntry
 		this.linkEntry.connect('activate', () =>
 		{
 			if(this.castButton.get_sensitive())
-			{
 				this.castButton.clicked();
-			}
 		});
 
 		this.castButton.connect('clicked', () => this._getInfo());
