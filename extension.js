@@ -40,13 +40,17 @@ function enable()
 				addonMenuItem = new Widget.addonMenuItem();
 				castMenu.castSubMenu.menu.addMenuItem(addonMenuItem);
 
-				if(typeof castMenu.isServiceEnabled !== 'undefined')
-				{
-					if(castMenu.isServiceEnabled === false) addonMenuItem.actor.hide();
+				if(	typeof castMenu.isServiceEnabled !== 'undefined'
+					&& castMenu.isServiceEnabled === false
+				) {
+					addonMenuItem.actor.hide();
 				}
 
-				if(typeof castMenu.serviceMenuItem !== 'undefined') Addons.setLastMenuItem(castMenu, castMenu.serviceMenuItem);
-				if(typeof castMenu.settingsMenuItem !== 'undefined') Addons.setLastMenuItem(castMenu, castMenu.settingsMenuItem);
+				if(typeof castMenu.serviceMenuItem !== 'undefined')
+					Addons.setLastMenuItem(castMenu, castMenu.serviceMenuItem);
+
+				if(typeof castMenu.settingsMenuItem !== 'undefined')
+					Addons.setLastMenuItem(castMenu, castMenu.settingsMenuItem);
 			}
 
 			return GLib.SOURCE_REMOVE;
@@ -56,7 +60,8 @@ function enable()
 
 function disable()
 {
-	if(timeout) GLib.source_remove(timeout);
+	if(timeout)
+		GLib.source_remove(timeout);
 
 	if(addonMenuItem)
 	{
@@ -65,7 +70,8 @@ function disable()
 		let lockingScreen = (Main.sessionMode.currentMode == 'unlock-dialog'
 			|| Main.sessionMode.currentMode == 'lock-screen');
 
-		if(!lockingScreen && castMenu) Addons.setLastMenuItem(castMenu, addonMenuItem);
+		if(!lockingScreen && castMenu)
+			Addons.setLastMenuItem(castMenu, addonMenuItem);
 
 		addonMenuItem.destroy();
 	}
