@@ -1,16 +1,13 @@
 const { Gio, Gtk } = imports.gi;
 const Local = imports.misc.extensionUtils.getCurrentExtension();
 const Gettext = imports.gettext;
-const extensionsPath = Local.path.substring(0, Local.path.lastIndexOf('/'));
-const mainPath = extensionsPath + '/cast-to-tv@rafostar.github.com';
-const localePath = mainPath + '/locale_addons/cast-to-tv-links-addon';
 const GettextDomain = Gettext.domain(Local.metadata['gettext-domain']);
 const _ = GettextDomain.gettext;
 const Settings = getSettings();
 
 function init()
 {
-	Gettext.bindtextdomain(Local.metadata['gettext-domain'], localePath);
+	Gettext.bindtextdomain(Local.metadata['gettext-domain'], Local.path + '/locale');
 }
 
 function getSettings()

@@ -10,7 +10,6 @@ const Gettext = imports.gettext;
 const Local = imports.misc.extensionUtils.getCurrentExtension();
 const extensionsPath = Local.path.substring(0, Local.path.lastIndexOf('/'));
 const mainPath = extensionsPath + '/cast-to-tv@rafostar.github.com';
-const localePath = mainPath + '/locale_addons/cast-to-tv-links-addon';
 
 imports.searchPath.unshift(mainPath);
 const Widget = Local.imports.widget;
@@ -22,7 +21,7 @@ let timeout;
 
 function init()
 {
-	Gettext.bindtextdomain(Local.metadata['gettext-domain'], localePath);
+	Gettext.bindtextdomain(Local.metadata['gettext-domain'], Local.path + '/locale');
 }
 
 function enable()
