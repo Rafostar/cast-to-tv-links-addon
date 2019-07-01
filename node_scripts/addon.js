@@ -10,6 +10,7 @@ var ffmpeg_debug = debug('ffmpeg');
 var config;
 var selection;
 var streamProcess;
+var isDirect;
 
 var stdioConf = 'ignore';
 if(ffmpeg_debug.enabled) stdioConf = 'inherit';
@@ -29,6 +30,7 @@ exports.handleSelection = function(selectionContents, configContents)
 {
 	config = configContents;
 	selection = selectionContents;
+	isDirect = false;
 
 	links_debug(`Obtained config: ${JSON.stringify(config)}`);
 	links_debug(`Obtained selection: ${JSON.stringify(selection)}`);
@@ -38,6 +40,7 @@ exports.closeStream = function()
 {
 	config = null;
 	selection = null;
+	isDirect = null;
 
 	links_debug('Stream closed. Config and selection data wiped');
 }
@@ -67,6 +70,13 @@ exports.fileStream = function(req, res)
 			res.setHeader('Content-Type', 'video/x-matroska');
 			res.setHeader('Connection', 'keep-alive');
 			break;
+	}
+
+	if(isDirect)
+	{
+		links_debug(`New http request: ${req.headers.range}`);
+		req.pipe(request.get(selection.mediaSrc)).pipe(res);
+		return;
 	}
 
 	var isSeparate = (selection.videoSrc && selection.audioSrc) ? true : (selection.mediaSrc) ? false : null;
@@ -107,6 +117,7 @@ exports.fileStream = function(req, res)
 		else
 		{
 			links_debug('Direct media streaming');
+			isDirect = true;
 			req.pipe(request.get(selection.mediaSrc)).pipe(res);
 		}
 	}
