@@ -209,7 +209,13 @@ function detectTranscoding()
 			links_debug('Obtaining missing video height...');
 
 			selection.height.actual = (mediaInfo.height || mediaInfo.coded_height);
-			links_debug(`Obtained video height: ${selection.fps.actual}`);
+			if(!selection.height.actual)
+			{
+				links_debug('Could not detect video height. Transcoding enabled');
+				return true;
+			}
+
+			links_debug(`Obtained video height: ${selection.height.actual}`);
 		}
 	}
 
