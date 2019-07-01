@@ -4,6 +4,7 @@ var { spawn } = require('child_process');
 var request = require('request');
 var debug = require('debug');
 var links_debug = debug('links-addon');
+var ffprobe_debug = debug('ffprobe');
 var ffmpeg_debug = debug('ffmpeg');
 
 var config;
@@ -68,39 +69,61 @@ exports.fileStream = function(req, res)
 			break;
 	}
 
-	var needsTranscoding = false;
-
-	if(selection.streamType == 'VIDEO_ENCODE')
+	var isSeparate = (selection.videoSrc && selection.audioSrc) ? true : (selection.mediaSrc) ? false : null;
+	if(isSeparate === null)
 	{
-		needsTranscoding = detectTranscoding();
+		links_debug(`Invalid or missing selection info!`);
+		return res.sendStatus(404);
 	}
+	links_debug(`Are video and audio tracks separate: ${isSeparate}`);
 
-	if(!needsTranscoding)
+	var needsTranscoding = (selection.streamType == 'VIDEO_ENCODE') ? detectTranscoding() : false;
+	links_debug(`Is transcoding needed: ${needsTranscoding}`);
+	if(needsTranscoding)
 	{
-		if(selection.videoSrc && selection.audioSrc) mediaMerge(true).pipe(res);
-		else if(selection.mediaSrc && selection.streamType == 'VIDEO_ENCODE') mediaMerge(false).pipe(res);
-		else if(selection.mediaSrc) req.pipe(request.get(selection.mediaSrc)).pipe(res);
-		else return res.sendStatus(404);
+		switch(config.videoAcceleration)
+		{
+			case 'none':
+				links_debug('Software media encoding');
+				videoEncode(isSeparate).pipe(res);
+				break;
+			case 'vaapi':
+				links_debug('VAAPI media encoding');
+				vaapiEncode(isSeparate).pipe(res);
+				break;
+			default:
+				links_debug(`Invalid video acceleration option: ${config.videoAcceleration}`);
+				return res.end();
+		}
 	}
 	else
 	{
-		var isSeparate;
-
-		if(selection.videoSrc && selection.audioSrc) isSeparate = true;
-		else if(selection.mediaSrc) isSeparate = false;
-		else return res.sendStatus(404);
-
-		if(config.videoAcceleration == 'none') videoEncode(isSeparate).pipe(res);
-		else if(config.videoAcceleration == 'vaapi') vaapiEncode(isSeparate).pipe(res);
-		else return res.end();
+		if(	isSeparate
+			|| (!isSeparate && selection.streamType == 'VIDEO_ENCODE')
+		) {
+			links_debug('Media will be merged into single file');
+			mediaMerge(isSeparate).pipe(res);
+		}
+		else
+		{
+			links_debug('Direct media streaming');
+			req.pipe(request.get(selection.mediaSrc)).pipe(res);
+		}
 	}
 
 	req.on('close', () =>
 	{
-		try { process.kill(streamProcess.pid, 'SIGHUP'); }
-		catch(err) {}
-
-		links_debug('Killed stream process');
+		if(streamProcess)
+		{
+			const sig = 'SIGHUP';
+			try {
+				process.kill(streamProcess.pid, sig);
+				links_debug(`Send ${sig} signal to stream process`);
+			}
+			catch(err) {
+				links_debug(err)
+			}
+		}
 	});
 }
 
@@ -131,43 +154,68 @@ exports.coverStream = function(req, res)
 
 function detectTranscoding()
 {
+	links_debug('Determining if transcoding is needed...');
+
 	var mediaInfo = null;
 
 	if(!selection.fps.actual || !selection.height.actual)
 	{
 		var source = (selection.videoSrc || selection.mediaSrc);
 		mediaInfo = ffprobe(source, { path: config.ffprobePath }).streams[0];
+
+		/* On parsing error */
+		if(!mediaInfo)
+		{
+			ffprobe_debug(`FFprobe data is: ${mediaInfo}`);
+			links_debug('Could not parse FFprobe data. Transcoding enabled');
+			return true;
+		}
 	}
 
+	/* Skipped when info not needed or parsing error */
 	if(mediaInfo)
 	{
+		links_debug('Successfully parsed FFprobe data');
+		ffprobe_debug(mediaInfo);
+
 		if(!selection.fps.actual)
 		{
-			var fps = (mediaInfo.r_frame_rate || mediaInfo.avg_frame_rate);
-			if(!fps) return true;
+			links_debug('Obtaining missing fps...');
 
-			if(typeof fps === 'string')
+			var fps = (mediaInfo.r_frame_rate || mediaInfo.avg_frame_rate);
+			if(!fps)
 			{
-				if(fps.includes('/')) fps = fps.split('/')[0];
+				links_debug('Could not detect fps. Transcoding enabled');
+				return true;
 			}
 
-			selection.fps.actual = fps;
+			selection.fps.actual = (typeof fps === 'string' && fps.includes('/')) ? fps.split('/')[0] : fps;
+			links_debug(`Obtained video fps: ${selection.fps.actual}`);
 		}
 
 		if(!selection.height.actual)
 		{
+			links_debug('Obtaining missing video height...');
+
 			selection.height.actual = (mediaInfo.height || mediaInfo.coded_height);
+			links_debug(`Obtained video height: ${selection.fps.actual}`);
 		}
 	}
+
+	links_debug(`Expected fps: ${selection.fps.expected}, actual: ${selection.fps.actual}`);
+	links_debug(`Expected height: ${selection.height.expected}, actual: ${selection.height.actual}`);
+
+	var detectedQuality = `${selection.height.actual}p${selection.fps.actual}`;
+	var expectedQuality = `${selection.height.expected}p${selection.fps.expected}`;
 
 	if(	selection.fps.actual > selection.fps.expected
 		&& selection.height.actual >= selection.height.expected
 	) {
-		links_debug('Media needs transcoding');
+		links_debug(`Detected ${detectedQuality} is greater than ${expectedQuality}`);
 		return true;
 	}
 
-	links_debug('No transcoding is needed');
+	links_debug(`Detected ${detectedQuality} is lower than or equal to requested ${expectedQuality}`);
 	return false;
 }
 
