@@ -1,7 +1,8 @@
 # Cast to TV Links Add-on
+[![License](https://img.shields.io/github/license/Rafostar/cast-to-tv-links-addon.svg)](https://github.com/Rafostar/cast-to-tv-links-addon/blob/master/LICENSE)
+[![Crowdin](https://d322cqt584bo4o.cloudfront.net/cast-to-tv/localized.svg)](https://crowdin.com/project/cast-to-tv)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=TFVDFD88KQ322)
 [![Donate](https://img.shields.io/badge/Donate-PayPal.Me-lightgrey.svg)](https://www.paypal.me/Rafostar)
-[![Crowdin](https://d322cqt584bo4o.cloudfront.net/cast-to-tv/localized.svg)](https://crowdin.com/project/cast-to-tv)
 
 Web links casting support for GNOME Shell Extension Cast to TV.
 
