@@ -52,7 +52,7 @@ function getSetting(setting)
 	var gsettings = spawnSync('gsettings', ['--schemadir', schemaDir,
 		'get', 'org.gnome.shell.extensions.cast-to-tv-links-addon', setting]);
 
-	var outStr = gsettings.stdout.toString().replace(/\'/g, '').replace(/\n/, '');
+	var outStr = String(gsettings.stdout).replace(/\'/g, '').replace(/\n/, '');
 	return outStr;
 }
 
