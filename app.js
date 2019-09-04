@@ -4,26 +4,31 @@ imports.gi.versions.Gdk = '3.0';
 const { Gio, Gtk, Gdk, GLib, Pango, GdkPixbuf } = imports.gi;
 const ByteArray = imports.byteArray;
 const Gettext = imports.gettext;
-const MetadataDomain = 'cast-to-tv-links-addon';
-const GettextDomain = Gettext.domain(MetadataDomain);
-const _ = GettextDomain.gettext;
-const extensionsPath = GLib.get_home_dir() + '/.local/share/gnome-shell/extensions';
-const mainPath = extensionsPath + '/cast-to-tv@rafostar.github.com';
-const localPath = extensionsPath + '/cast-to-tv-links-addon@rafostar.github.com';
-Gettext.bindtextdomain(MetadataDomain, localPath + '/locale');
 
-imports.searchPath.unshift(mainPath);
+const LOCAL_PATH = GLib.get_current_dir();
+const EXTENSIONS_PATH = LOCAL_PATH.substring(0, LOCAL_PATH.lastIndexOf('/'));
+const MAIN_PATH = EXTENSIONS_PATH + '/cast-to-tv@rafostar.github.com';
+
+/* Imports from main extension */
+imports.searchPath.unshift(MAIN_PATH);
+const Helper = imports.helper;
 const shared = imports.shared.module.exports;
-const tempDir = shared.tempDir + '/links-addon';
-const encodeFormats = readFromFile(localPath + '/encode-formats.json');
 imports.searchPath.shift();
+
+const METADATA_DOMAIN = 'cast-to-tv-links-addon';
+const TEMP_DIR = shared.tempDir + '/links-addon';
+const ENCODE_FORMATS = readFromFile(LOCAL_PATH + '/encode-formats.json');
+
+const GettextDomain = Gettext.domain(METADATA_DOMAIN);
+const _ = GettextDomain.gettext;
+Helper.initTranslations(LOCAL_PATH, 'cast-to-tv-links-addon');
 
 class linkEntry
 {
 	constructor()
 	{
 		this.title = 'Cast to TV';
-		this.imagePath = tempDir + '/image';
+		this.imagePath = TEMP_DIR + '/image';
 		GLib.set_prgname(this.title);
 		this.application = new Gtk.Application();
 		this.application.connect('activate', () => this._onActivate());
@@ -58,7 +63,7 @@ class linkEntry
 		}
 
 		this.provider = new Gtk.CssProvider();
-		this.provider.load_from_path(localPath + '/style.css');
+		this.provider.load_from_path(LOCAL_PATH + '/style.css');
 
 		this.window.add(this._getBody());
 	}
@@ -202,7 +207,7 @@ class linkEntry
 		if(!link) link = this.linkEntry.text;
 
 		let [res, pid, stdin, stdout, stderr] = GLib.spawn_async_with_pipes(
-			'/usr/bin', ['node', localPath + '/node_scripts/utils/link-parser', link],
+			'/usr/bin', ['node', LOCAL_PATH + '/node_scripts/utils/link-parser', link],
 			null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
 
 		let stream = new Gio.DataInputStream({ base_stream: new Gio.UnixInputStream({ fd: stdout }) });
@@ -306,7 +311,7 @@ class linkEntry
 		if(mediaInfo.protocol)
 		{
 			selection.protocol = mediaInfo.protocol;
-			if(encodeFormats && encodeFormats.includes(selection.protocol))
+			if(ENCODE_FORMATS && ENCODE_FORMATS.includes(selection.protocol))
 			{
 				selection.streamType = 'VIDEO_ENCODE';
 				return selection;
@@ -426,5 +431,5 @@ function readOutputAsync(stream, callback)
 	});
 }
 
-GLib.mkdir_with_parents(tempDir, 448); // 700 in octal
+GLib.mkdir_with_parents(TEMP_DIR, 448); // 700 in octal
 let app = new linkEntry();
