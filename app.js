@@ -1,3 +1,6 @@
+imports.gi.versions.Gtk = '3.0';
+imports.gi.versions.Gdk = '3.0';
+
 const { Gio, Gtk, Gdk, GLib, Pango, GdkPixbuf } = imports.gi;
 const ByteArray = imports.byteArray;
 const Gettext = imports.gettext;
@@ -13,6 +16,7 @@ imports.searchPath.unshift(mainPath);
 const shared = imports.shared.module.exports;
 const tempDir = shared.tempDir + '/links-addon';
 const encodeFormats = readFromFile(localPath + '/encode-formats.json');
+imports.searchPath.shift();
 
 class linkEntry
 {
