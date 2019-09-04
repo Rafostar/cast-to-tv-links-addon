@@ -1,3 +1,5 @@
+imports.gi.versions.Gtk = '3.0';
+
 const { Gio, Gtk } = imports.gi;
 const Local = imports.misc.extensionUtils.getCurrentExtension();
 const Gettext = imports.gettext;
