@@ -51,9 +51,7 @@ exports.fileStream = function(req, res)
 	if(streamProcess)
 	{
 		links_debug('Stream in progress. Send status 429');
-		res.statusCode = 429;
-		res.end();
-		return;
+		return res.sendStatus(429);
 	}
 
 	res.setHeader('Access-Control-Allow-Origin', '*');
