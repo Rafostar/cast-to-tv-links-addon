@@ -3,49 +3,19 @@ const Local = imports.misc.extensionUtils.getCurrentExtension();
 const Gettext = imports.gettext;
 const GettextDomain = Gettext.domain(Local.metadata['gettext-domain']);
 const _ = GettextDomain.gettext;
-const Settings = getSettings();
+const extensionsPath = Local.path.substring(0, Local.path.lastIndexOf('/'));
+const mainPath = extensionsPath + '/cast-to-tv@rafostar.github.com';
+
+/* Imports from main extension */
+imports.searchPath.unshift(mainPath);
+const { SettingLabel } = imports.prefs_shared;
+const Helper = imports.helper;
+const Settings = Helper.getSettings(Local.path, Local.metadata['settings-schema']);
+imports.searchPath.shift();
 
 function init()
 {
-	Gettext.bindtextdomain(Local.metadata['gettext-domain'], Local.path + '/locale');
-}
-
-function getSettings()
-{
-	const GioSSS = Gio.SettingsSchemaSource;
-	let schemaSource = GioSSS.new_from_directory(
-		Local.path + '/schemas', GioSSS.get_default(), false);
-	let schemaObj = schemaSource.lookup(Local.metadata['settings-schema'], true);
-
-	return new Gio.Settings({ settings_schema: schemaObj });
-}
-
-class settingLabel
-{
-	constructor(text, isTitle, isTopMargin)
-	{
-		let label = null;
-		let marginLeft = 0;
-		let marginTop = 0;
-
-		if(isTitle) label = '<span font="12.5"><b>' + text + '</b></span>';
-		else
-		{
-			label = text;
-			marginLeft = 12;
-		}
-
-		if(isTopMargin) marginTop = 20;
-
-		return new Gtk.Label({
-			label: label,
-			use_markup: true,
-			hexpand: true,
-			halign: Gtk.Align.START,
-			margin_top: marginTop,
-			margin_left: marginLeft
-		});
-	}
+	Helper.initTranslations(Local.path, Local.metadata['gettext-domain']);
 }
 
 class LinksSettings extends Gtk.Grid
@@ -58,11 +28,11 @@ class LinksSettings extends Gtk.Grid
 		let widget = null;
 
 		/* Label: Links Options */
-		label = new settingLabel(_("Links Options"), true);
+		label = new SettingLabel(_("Links Options"), true);
 		this.attach(label, 0, 0, 1, 1);
 
 		/* Preferred youtube-dl Format */
-		label = new settingLabel(_("Preferred format"));
+		label = new SettingLabel(_("Preferred format"));
 		widget = new Gtk.ComboBoxText({ width_request: 220, halign: Gtk.Align.END });
 		widget.append('combined', _("Best seekable"));
 		widget.append('separate', _("Best quality"));
@@ -71,7 +41,7 @@ class LinksSettings extends Gtk.Grid
 		this.attach(widget, 1, 1, 1, 1);
 
 		/* youtube-dl Path */
-		label = new settingLabel(_("Path to youtube-dl"));
+		label = new SettingLabel(_("Path to youtube-dl"));
 		widget = new Gtk.Entry({ width_request: 220, halign:Gtk.Align.END });
 		widget.set_placeholder_text("/usr/bin/youtube-dl");
 		Settings.bind('ytdl-path', widget, 'text', Gio.SettingsBindFlags.DEFAULT);
@@ -80,7 +50,7 @@ class LinksSettings extends Gtk.Grid
 
 		/* Max Video Quality */
 		/* TRANSLATORS: Can be translated simply as "Max quality" to make it shorter */
-		label = new settingLabel(_("Max video quality"));
+		label = new SettingLabel(_("Max video quality"));
 		let hbox = new Gtk.HBox({ halign: Gtk.Align.END });
 		widget = new Gtk.ComboBoxText();
 		widget.append('720p', '720p');
@@ -98,7 +68,7 @@ class LinksSettings extends Gtk.Grid
 		this.attach(hbox, 1, 3, 1, 1);
 
 		/* Allow VP9 */
-		label = new settingLabel(_("Allow VP9 codec"));
+		label = new SettingLabel(_("Allow VP9 codec"));
 		widget = new Gtk.Switch({ halign:Gtk.Align.END });
 		widget.set_active(Settings.get_boolean('allow-vp9'));
 		Settings.bind('allow-vp9', widget, 'active', Gio.SettingsBindFlags.DEFAULT);
@@ -106,11 +76,11 @@ class LinksSettings extends Gtk.Grid
 		this.attach(widget, 1, 4, 1, 1);
 
 		/* Label: Subtitles */
-		label = new settingLabel(_("Subtitles"), true, true);
+		label = new SettingLabel(_("Subtitles"), true, true);
 		this.attach(label, 0, 5, 1, 1);
 
 		/* Preferred Lang */
-		label = new settingLabel(_("Preferred language"));
+		label = new SettingLabel(_("Preferred language"));
 		widget = new Gtk.Entry({ halign:Gtk.Align.END });
 		widget.set_placeholder_text("en");
 		Settings.bind('preferred-lang', widget, 'text', Gio.SettingsBindFlags.DEFAULT);
@@ -118,7 +88,7 @@ class LinksSettings extends Gtk.Grid
 		this.attach(widget, 1, 6, 1, 1);
 
 		/* Fallback Lang */
-		label = new settingLabel(_("Fallback language"));
+		label = new SettingLabel(_("Fallback language"));
 		widget = new Gtk.Entry({ halign:Gtk.Align.END });
 		widget.set_placeholder_text(_("none"));
 		Settings.bind('fallback-lang', widget, 'text', Gio.SettingsBindFlags.DEFAULT);
