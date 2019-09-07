@@ -18,6 +18,7 @@ imports.searchPath.shift();
 const METADATA_DOMAIN = 'cast-to-tv-links-addon';
 const TEMP_DIR = shared.tempDir + '/links-addon';
 const ENCODE_FORMATS = readFromFile(LOCAL_PATH + '/encode-formats.json');
+const NODE_PATH = (GLib.find_program_in_path('nodejs') || GLib.find_program_in_path('node'));
 
 const GettextDomain = Gettext.domain(METADATA_DOMAIN);
 const _ = GettextDomain.gettext;
@@ -207,7 +208,7 @@ class linkEntry
 		if(!link) link = this.linkEntry.text;
 
 		let [res, pid, stdin, stdout, stderr] = GLib.spawn_async_with_pipes(
-			'/usr/bin', ['node', LOCAL_PATH + '/node_scripts/utils/link-parser', link],
+			'/usr/bin', [NODE_PATH, LOCAL_PATH + '/node_scripts/utils/link-parser', link],
 			null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
 
 		let stream = new Gio.DataInputStream({ base_stream: new Gio.UnixInputStream({ fd: stdout }) });
