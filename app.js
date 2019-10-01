@@ -17,8 +17,10 @@ imports.searchPath.shift();
 
 const METADATA_DOMAIN = 'cast-to-tv-links-addon';
 const TEMP_DIR = shared.tempDir + '/links-addon';
-const ENCODE_FORMATS = readFromFile(LOCAL_PATH + '/encode-formats.json');
 const NODE_PATH = (GLib.find_program_in_path('nodejs') || GLib.find_program_in_path('node'));
+const ENCODE_FORMATS = readFromFile(LOCAL_PATH + '/encode-formats.json');
+const MUSIC_FORMATS = ['aac', 'mp3', 'm4a', 'vorbis', 'wav', 'opus', 'flac'];
+const PICURE_FORMATS = ['bmp', 'gif', 'jpeg', 'jpg', 'png', 'webp'];
 
 const GettextDomain = Gettext.domain(METADATA_DOMAIN);
 const _ = GettextDomain.gettext;
@@ -45,7 +47,12 @@ class linkEntry
 
 	_buildUI()
 	{
-		let geoHints = new Gdk.Geometry({ min_height: 0, max_height: 0, min_width: 620, max_width: 620 });
+		let geoHints = new Gdk.Geometry({
+			min_height: 0,
+			max_height: 0,
+			min_width: 620,
+			max_width: 620
+		});
 
 		this.window = new Gtk.ApplicationWindow({
 			application: this.application,
@@ -288,6 +295,7 @@ class linkEntry
 			title: mediaInfo.title,
 			filePath: mediaInfo.title,
 			coverSrc: this.imagePath,
+			streamType: 'VIDEO',
 			height: mediaInfo.height,
 			fps: mediaInfo.fps
 		};
@@ -333,30 +341,13 @@ class linkEntry
 
 	_isMusic(mediaInfo)
 	{
-		var isMusic = (
-			mediaInfo.container == 'aac'
-			|| mediaInfo.container == 'mp3'
-			|| mediaInfo.container == 'm4a'
-			|| mediaInfo.container == 'vorbis'
-			|| mediaInfo.container == 'wav'
-			|| mediaInfo.container == 'opus'
-			|| mediaInfo.container == 'flac'
-		);
-
+		var isMusic = MUSIC_FORMATS.includes(mediaInfo.container);
 		return isMusic;
 	}
 
 	_isPicture(mediaInfo)
 	{
-		var isPicture = (
-			mediaInfo.container == 'bmp'
-			|| mediaInfo.container == 'gif'
-			|| mediaInfo.container == 'jpeg'
-			|| mediaInfo.container == 'jpg'
-			|| mediaInfo.container == 'png'
-			|| mediaInfo.container == 'webp'
-		);
-
+		var isPicture = PICURE_FORMATS.includes(mediaInfo.container);
 		return isPicture;
 	}
 
@@ -368,7 +359,7 @@ class linkEntry
 		if(mediaInfo.url || mediaInfo.videoUrl)
 		{
 			selection = this._getSelection(mediaInfo);
-			playlist = [mediaInfo.title];
+			playlist = [selection.filePath];
 		}
 
 		if(selection && playlist)
