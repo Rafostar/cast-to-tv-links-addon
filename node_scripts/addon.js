@@ -246,10 +246,14 @@ function mediaMerge(isSeparate)
 	'pipe:1'
 	];
 
-	if(isSeparate) mergeOpts.unshift('-i', 'async:cache:' + selection.videoSrc, '-i', 'async:cache:' + selection.audioSrc);
-	else mergeOpts.unshift('-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
+	if(isSeparate)
+	{
+		mergeOpts.unshift(...downloadOpts, '-i', 'async:cache:' + selection.videoSrc,
+			...downloadOpts, '-i', 'async:cache:' + selection.audioSrc);
+	}
+	else
+		mergeOpts.unshift(...downloadOpts, '-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
 
-	mergeOpts = [...downloadOpts, ...mergeOpts];
 	links_debug(`Starting ffmpeg with opts: ${JSON.stringify(mergeOpts)}`);
 
 	streamProcess = spawn(config.ffmpegPath, mergeOpts,
@@ -287,10 +291,14 @@ function videoEncode(isSeparate)
 	'pipe:1'
 	];
 
-	if(isSeparate) encodeOpts.unshift('-i', 'async:cache:' + selection.videoSrc, '-i', 'async:cache:' + selection.audioSrc);
-	else encodeOpts.unshift('-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
+	if(isSeparate)
+	{
+		encodeOpts.unshift(...downloadOpts, '-i', 'async:cache:' + selection.videoSrc,
+			...downloadOpts, '-i', 'async:cache:' + selection.audioSrc);
+	}
+	else
+		encodeOpts.unshift(...downloadOpts, '-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
 
-	encodeOpts = [...downloadOpts, ...encodeOpts];
 	links_debug(`Starting ffmpeg with opts: ${JSON.stringify(encodeOpts)}`);
 
 	streamProcess = spawn(config.ffmpegPath, encodeOpts,
@@ -326,10 +334,14 @@ function vaapiEncode(isSeparate)
 	'pipe:1'
 	];
 
-	if(isSeparate) encodeOpts.unshift('-i', 'async:cache:' + selection.videoSrc, '-i', 'async:cache:' + selection.audioSrc);
-	else encodeOpts.unshift('-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
+	if(isSeparate)
+	{
+		encodeOpts.unshift(...downloadOpts, '-i', 'async:cache:' + selection.videoSrc,
+			...downloadOpts, '-i', 'async:cache:' + selection.audioSrc);
+	}
+	else
+		encodeOpts.unshift(...downloadOpts, '-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
 
-	encodeOpts = [...downloadOpts, ...encodeOpts];
 	encodeOpts.unshift('-vaapi_device', '/dev/dri/renderD128');
 	links_debug(`Starting ffmpeg with opts: ${JSON.stringify(encodeOpts)}`);
 
