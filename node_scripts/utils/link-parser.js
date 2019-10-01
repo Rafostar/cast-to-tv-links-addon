@@ -6,54 +6,49 @@ var ytdl_debug = debug('ytdl');
 var JSONStream = require('JSONStream');
 var request = require('request');
 var { spawn, spawnSync } = require('child_process');
-var schemaDir = path.join(__dirname + '/../../schemas');
-var mainExtPath = path.join(__dirname + '/../../../cast-to-tv@rafostar.github.com');
 
 /* Cast to TV imports */
-var shared = require(mainExtPath + '/shared');
-const tempDir = shared.tempDir + '/links-addon';
-const imagePath = tempDir + '/image';
+const MAIN_EXT_PATH = path.join(__dirname + '/../../../cast-to-tv@rafostar.github.com');
+var gnome = require(MAIN_EXT_PATH + '/node_scripts/gnome');
+var shared = require(MAIN_EXT_PATH + '/shared');
 
-const link = process.argv[2];
-if(!link)
+const SCHEMA_DIR = path.join(__dirname + '/../../schemas');
+const TEMP_DIR = shared.tempDir + '/links-addon';
+const IMAGE_PATH = TEMP_DIR + '/image';
+const PICTURE_FORMATS = ['bmp', 'gif', 'jpeg', 'jpg', 'png', 'webp'];
+const LINK = process.argv[2];
+
+if(!LINK)
 {
 	parser_debug('No link provided!');
-	process.exit();
+	process.exit(1);
 }
 else
 {
-	var tempExist = fs.existsSync(tempDir);
-	if(!tempExist) fs.mkdirSync(tempDir);
+	var tempExist = fs.existsSync(TEMP_DIR);
+	if(!tempExist) fs.mkdirSync(TEMP_DIR);
+
+	gnome.loadSchema("org.gnome.shell.extensions.cast-to-tv-links-addon", SCHEMA_DIR);
 }
 
 var linkOpts = {
 	path: getPath(),
-	mode: getSetting('ytdl-mode'),
-	quality: getSetting('max-quality'),
-	fps: getSetting('max-fps'),
-	vp9: getSetting('allow-vp9')
+	mode: gnome.getSetting('ytdl-mode'),
+	quality: gnome.getSetting('max-quality'),
+	fps: gnome.getSetting('max-fps'),
+	vp9: gnome.getSetting('allow-vp9')
 };
 
 parser_debug(`Setting parser opts: ${JSON.stringify(linkOpts)}`);
-
-parseLink(link, linkOpts);
+parseLink(LINK, linkOpts);
 
 function getPath()
 {
-	var ytdlPath = getSetting('ytdl-path');
+	var ytdlPath = gnome.getSetting('ytdl-path');
 	if(!ytdlPath) ytdlPath = '/usr/bin/youtube-dl';
 
 	parser_debug(`Obtained path: ${ytdlPath}`);
 	return ytdlPath;
-}
-
-function getSetting(setting)
-{
-	var gsettings = spawnSync('gsettings', ['--schemadir', schemaDir,
-		'get', 'org.gnome.shell.extensions.cast-to-tv-links-addon', setting]);
-
-	var outStr = String(gsettings.stdout).replace(/\'/g, '').replace(/\n/, '');
-	return outStr;
 }
 
 function getSubs(data, lang)
@@ -88,7 +83,6 @@ function checkUrl(url)
 function parseLink(Url, opts)
 {
 	var info;
-	var format;
 	var params;
 	var fps;
 
@@ -136,11 +130,13 @@ function parseLink(Url, opts)
 	var bestSeekable = `best${params}${fps}${disallowed}/best${params}${disallowed}/best${disallowed}/best`;
 	var bestAll = `best${params}${fps}/best${params}/best`;
 
-	if(opts.mode == 'combined') format = bestSeekable;
-	else format = `bestvideo${params}${fps}+bestaudio/bestvideo${params}+bestaudio/${bestAll}`;
+	var format = (opts.mode === 'combined') ?
+		bestSeekable : `bestvideo${params}${fps}+bestaudio/bestvideo${params}+bestaudio/${bestAll}`;
 
 	parser_debug(`Requested ytdl format: ${format}`);
-	var youtubedl = spawn(opts.path, ['--ignore-config', '--socket-timeout', '3', '--all-subs', '--playlist-end', '1', '-f', format, '-j', Url]);
+
+	var ytdlOpts = ['--ignore-config', '--socket-timeout', '3', '--all-subs', '--playlist-end', '1', '-f', format, '-j', Url];
+	var youtubedl = spawn(opts.path, ytdlOpts);
 
 	youtubedl.once('close', async(code) =>
 	{
@@ -154,10 +150,10 @@ function parseLink(Url, opts)
 
 			if(isInvalid)
 			{
-				if(linkOpts.mode != 'combined')
+				if(linkOpts.mode !== 'combined')
 				{
 					linkOpts.mode = 'combined';
-					return parseLink(link, linkOpts);
+					return parseLink(LINK, linkOpts);
 				}
 				else
 				{
@@ -166,7 +162,10 @@ function parseLink(Url, opts)
 			}
 		}
 
-		if(!parser_debug.enabled && !ytdl_debug.enabled) console.log(JSON.stringify(info));
+		if(!parser_debug.enabled && !ytdl_debug.enabled)
+		{
+			console.log(JSON.stringify(info));
+		}
 		else
 		{
 			parser_debug('\nSELECTED INFO:');
@@ -174,12 +173,15 @@ function parseLink(Url, opts)
 		}
 	});
 
-	let setResolution = (data) =>
+	var setResolution = (data) =>
 	{
-		if(data.width && data.height) info.resolution = data.width + 'x' + data.height;
-		else if(data.height) info.resolution = data.height;
+		if(data.width && data.height)
+			info.resolution = data.width + 'x' + data.height;
+		else if(data.height)
+			info.resolution = data.height;
 
-		if(info.resolution && data.fps) info.resolution += '@' + data.fps;
+		if(info.resolution && data.fps)
+			info.resolution += '@' + data.fps;
 
 		info.height = {
 			expected: parseInt(opts.quality.slice(0, -1)),
@@ -192,6 +194,17 @@ function parseLink(Url, opts)
 		}
 	}
 
+	var getDownloadOpts = () =>
+	{
+		var opts = Array.from(ytdlOpts);
+
+		opts.splice(opts.indexOf('--all-subs'), 1);
+		opts.splice(opts.indexOf('-j'), 1);
+		opts.pop();
+
+		return opts;
+	}
+
 	youtubedl.stdout
 		.pipe(JSONStream.parse())
 		.once('data', (data) =>
@@ -199,39 +212,36 @@ function parseLink(Url, opts)
 			ytdl_debug(data);
 
 			info = {
+				link: LINK,
 				title: data.title,
+				ytdlOpts: getDownloadOpts(),
 				container: data.ext
 			};
 
 			if(data.thumbnail)
 			{
 				info.thumbnail = data.thumbnail;
-				request(info.thumbnail).pipe(fs.createWriteStream(imagePath));
+				request(info.thumbnail).pipe(fs.createWriteStream(IMAGE_PATH));
 			}
 			else
 			{
-				var isPicture = (
-					data.ext == 'bmp'
-					|| data.ext == 'gif'
-					|| data.ext == 'jpeg'
-					|| data.ext == 'jpg'
-					|| data.ext == 'png'
-					|| data.ext == 'webp'
-				);
+				var isPicture = PICTURE_FORMATS.includes(data.ext);
 
 				if(data.url && isPicture)
 				{
 					info.thumbnail = data.url;
-					request(info.thumbnail).pipe(fs.createWriteStream(imagePath));
+					request(info.thumbnail).pipe(fs.createWriteStream(IMAGE_PATH));
 				}
-				else fs.unlink(imagePath, () => {});
+				else
+					fs.unlink(IMAGE_PATH, () => {});
 			}
 
 			if(data.url)
 			{
 				setResolution(data);
 
-				if(data.vcodec && data.vcodec != 'none') info.vcodec = data.vcodec;
+				if(data.vcodec && data.vcodec !== 'none')
+					info.vcodec = data.vcodec;
 
 				info.url = data.url;
 				info.protocol = data.protocol;
@@ -240,11 +250,12 @@ function parseLink(Url, opts)
 			{
 				var getUrl = (format) =>
 				{
-					if(	typeof format.manifest_url !== 'undefined'
-						&& typeof format.fragment_base_url !== 'undefined'
+					if(
+						format.manifest_url
+						&& format.fragment_base_url
+						&& format.manifest_url === format.url
 					) {
-						if(format.manifest_url == format.url)
-							return format.fragment_base_url;
+						return format.fragment_base_url;
 					}
 
 					return format.url;
@@ -252,7 +263,7 @@ function parseLink(Url, opts)
 
 				data.requested_formats.forEach(format =>
 				{
-					if(format.vcodec && format.vcodec != 'none')
+					if(format.vcodec && format.vcodec !== 'none')
 					{
 						setResolution(data);
 
@@ -260,7 +271,7 @@ function parseLink(Url, opts)
 						info.videoUrl = getUrl(format);
 						info.protocol = format.protocol;
 					}
-					else if(format.acodec && format.acodec != 'none')
+					else if(format.acodec && format.acodec !== 'none')
 					{
 						info.acodec = format.acodec;
 						info.audioUrl = getUrl(format);
@@ -272,15 +283,17 @@ function parseLink(Url, opts)
 			{
 				var subsData = data.requested_subtitles;
 
-				var lang = getSetting('preferred-lang');
+				var lang = gnome.getSetting('preferred-lang');
 				if(!lang) lang = 'en';
 
+				parser_debug(`Using preferred subs lang: ${lang}`);
 				var subtitles = getSubs(subsData, lang);
 
 				if(subtitles) info.subtitles = subtitles;
 				else
 				{
-					lang = getSetting('fallback-lang');
+					lang = gnome.getSetting('fallback-lang');
+					parser_debug(`Using fallback subs lang: ${lang}`);
 					subtitles = getSubs(subsData, lang);
 
 					if(subtitles) info.subtitles = subtitles;
