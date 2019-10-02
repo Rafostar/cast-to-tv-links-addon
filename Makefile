@@ -1,5 +1,6 @@
 # Basic Makefile
 
+EXTNAME = cast-to-tv-links-addon
 UUID = cast-to-tv-links-addon@rafostar.github.com
 GETTEXT = cast-to-tv-links-addon
 PACKAGE = "Cast to TV - Links Addon"
@@ -35,6 +36,28 @@ zip-file: _build
 install: zip-file
 	mkdir -p $(INSTALLPATH)/$(UUID)
 	unzip -qo $(UUID).zip -d $(INSTALLPATH)/$(UUID)
+
+# Build and install #
+install: sync-translations
+ifeq ($(CUSTOMPATH),)
+	glib-compile-schemas ./schemas/
+	mkdir -p $(INSTALLPATH)/$(UUID)
+	cp -r $(ZIPFILES) $(INSTALLPATH)/$(UUID)
+else
+	mkdir -p $(CUSTOMPATH)/$(UUID)
+	cp -r $(filter-out schemas locale README.md COPYING, $(ZIPFILES)) $(CUSTOMPATH)/$(UUID)
+	mkdir -p /usr/share/glib-2.0/schemas
+	cp -r ./schemas/*.gschema.* /usr/share/glib-2.0/schemas/
+	glib-compile-schemas /usr/share/glib-2.0/schemas 2>/dev/null
+	mkdir -p /usr/share/locale
+	cp -r ./locale/* /usr/share/locale/
+	mkdir -p /usr/share/doc/$(EXTNAME)
+	cp ./README.md /usr/share/doc/$(EXTNAME)/
+	mkdir -p /usr/share/licenses/$(EXTNAME)
+	cp ./COPYING /usr/share/licenses/$(EXTNAME)/
+	mkdir -p $(CUSTOMPATH)/$(UUID)/node_modules
+	chmod 777 $(CUSTOMPATH)/$(UUID)/node_modules
+endif
 
 _build: glib-schemas sync-translations
 
