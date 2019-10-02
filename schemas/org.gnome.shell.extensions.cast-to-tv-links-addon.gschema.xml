@@ -1,7 +1,7 @@
 <schemalist gettext-domain="cast-to-tv-links-addon">
   <schema id="org.gnome.shell.extensions.cast-to-tv-links-addon" path="/org/gnome/shell/extensions/cast-to-tv-links-addon/">
     <key name="ytdl-mode" type="s">
-      <default>"separate"</default>
+      <default>"combined"</default>
       <summary>Preferred youtube-dl content</summary>
     </key>
     <key name="ytdl-path" type="s">
