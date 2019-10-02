@@ -4,6 +4,7 @@ Developer: Rafostar
 Extension GitHub: https://github.com/Rafostar/cast-to-tv-links-addon
 */
 const Local = imports.misc.extensionUtils.getCurrentExtension();
+const Widget = Local.imports.widget;
 
 const EXTENSIONS_PATH = Local.path.substring(0, Local.path.lastIndexOf('/'));
 const MAIN_PATH = EXTENSIONS_PATH + '/cast-to-tv@rafostar.github.com';
@@ -13,7 +14,6 @@ const DELAY = 1500;
 
 /* Imports from main extension */
 imports.searchPath.unshift(MAIN_PATH);
-const Widget = Local.imports.widget;
 const Addons = imports.addons;
 const Helper = imports.helper;
 imports.searchPath.shift();
