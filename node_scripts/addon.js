@@ -1,25 +1,23 @@
 var fs = require('fs');
-var ffprobe = require('./ffprobe-sync');
 var { spawn } = require('child_process');
 var request = require('request');
 var debug = require('debug');
 var links_debug = debug('links-addon');
-var ffprobe_debug = debug('ffprobe');
 var ffmpeg_debug = debug('ffmpeg');
 
 var config;
 var selection;
-var streamProcess;
 var isDirect;
+var isStreaming;
+var streamProcess = {};
 
-var stdioConf = 'ignore';
-if(ffmpeg_debug.enabled) stdioConf = 'inherit';
+const stdioConf = (ffmpeg_debug.enabled) ? 'inherit' : 'ignore';
 
 const downloadOpts = [
 	'-user_agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36',
 	'-multiple_requests', '0',
 	'-seekable', '1',
-	'-timeout', '100000',
+	'-timeout', '200000',
 	'-reconnect', '1',
 	'-reconnect_streamed', '1',
 	'-reconnect_at_eof', '1',
@@ -38,17 +36,20 @@ exports.handleSelection = function(selectionContents, configContents)
 
 exports.closeStream = function()
 {
-	config = null;
-	selection = null;
-	isDirect = null;
+	if(isStreaming && streamProcess.exitCode === null)
+	{
+		process.kill(streamProcess.pid, 'SIGHUP');
+		links_debug(`Send close signal to stream process`);
+	}
 
+	isStreaming = false;
 	links_debug('Stream closed. Config and selection data wiped');
 }
 
 exports.fileStream = function(req, res)
 {
 	/* Prevent spawning more then one ffmpeg encode process */
-	if(streamProcess)
+	if(isStreaming)
 	{
 		links_debug('Stream in progress. Send status 429');
 		return res.sendStatus(429);
@@ -73,8 +74,7 @@ exports.fileStream = function(req, res)
 	if(isDirect)
 	{
 		links_debug(`New http request: ${req.headers.range}`);
-		req.pipe(request.get(selection.mediaSrc)).pipe(res);
-		return;
+		return req.pipe(request.get(selection.mediaSrc)).pipe(res);
 	}
 
 	var isSeparate = (selection.videoSrc && selection.audioSrc) ? true : (selection.mediaSrc) ? false : null;
@@ -83,57 +83,22 @@ exports.fileStream = function(req, res)
 		links_debug(`Invalid or missing selection info!`);
 		return res.sendStatus(404);
 	}
-	links_debug(`Are video and audio tracks separate: ${isSeparate}`);
+	links_debug(`Separate video and audio tracks: ${isSeparate}`);
 
-	var needsTranscoding = (selection.streamType == 'VIDEO_ENCODE') ? detectTranscoding() : false;
-	links_debug(`Is transcoding needed: ${needsTranscoding}`);
-	if(needsTranscoding)
+	if(isSeparate || selection.streamType == 'VIDEO_ENCODE')
 	{
-		switch(config.videoAcceleration)
-		{
-			case 'none':
-				links_debug('Software media encoding');
-				videoEncode(isSeparate).pipe(res);
-				break;
-			case 'vaapi':
-				links_debug('VAAPI media encoding');
-				vaapiEncode(isSeparate).pipe(res);
-				break;
-			default:
-				links_debug(`Invalid video acceleration option: ${config.videoAcceleration}`);
-				return res.end();
-		}
+		links_debug('Media will be passed through FFmpeg');
+		isStreaming = true;
+		mediaMerge(isSeparate).pipe(res);
 	}
 	else
 	{
-		if(	isSeparate
-			|| (!isSeparate && selection.streamType == 'VIDEO_ENCODE')
-		) {
-			links_debug('Media will be merged into single file');
-			mediaMerge(isSeparate).pipe(res);
-		}
-		else
-		{
-			links_debug('Direct media streaming');
-			isDirect = true;
-			req.pipe(request.get(selection.mediaSrc)).pipe(res);
-		}
+		links_debug('Direct media streaming');
+		isDirect = true;
+		req.pipe(request.get(selection.mediaSrc)).pipe(res);
 	}
 
-	req.on('close', () =>
-	{
-		if(streamProcess)
-		{
-			const sig = 'SIGHUP';
-			try {
-				process.kill(streamProcess.pid, sig);
-				links_debug(`Send ${sig} signal to stream process`);
-			}
-			catch(err) {
-				links_debug(err)
-			}
-		}
-	});
+	req.once('close', exports.closeStream);
 }
 
 exports.subsStream = function(req, res)
@@ -161,201 +126,42 @@ exports.coverStream = function(req, res)
 	}
 }
 
-function detectTranscoding()
-{
-	links_debug('Determining if transcoding is needed...');
-
-	var mediaInfo = null;
-
-	if(!selection.fps.actual || !selection.height.actual)
-	{
-		var source = (selection.videoSrc || selection.mediaSrc);
-		mediaInfo = ffprobe(source, { path: config.ffprobePath }).streams[0];
-
-		/* On parsing error */
-		if(!mediaInfo)
-		{
-			ffprobe_debug(`FFprobe data is: ${mediaInfo}`);
-			links_debug('Could not parse FFprobe data. Transcoding enabled');
-			return true;
-		}
-	}
-
-	/* Skipped when info not needed or parsing error */
-	if(mediaInfo)
-	{
-		links_debug('Successfully parsed FFprobe data');
-		ffprobe_debug(mediaInfo);
-
-		if(!selection.fps.actual)
-		{
-			links_debug('Obtaining missing fps...');
-
-			var fps = (mediaInfo.r_frame_rate || mediaInfo.avg_frame_rate);
-			if(!fps)
-			{
-				links_debug('Could not detect fps. Transcoding enabled');
-				return true;
-			}
-
-			selection.fps.actual = (typeof fps === 'string' && fps.includes('/')) ? fps.split('/')[0] : fps;
-			links_debug(`Obtained video fps: ${selection.fps.actual}`);
-		}
-
-		if(!selection.height.actual)
-		{
-			links_debug('Obtaining missing video height...');
-
-			selection.height.actual = (mediaInfo.height || mediaInfo.coded_height);
-			if(!selection.height.actual)
-			{
-				links_debug('Could not detect video height. Transcoding enabled');
-				return true;
-			}
-
-			links_debug(`Obtained video height: ${selection.height.actual}`);
-		}
-	}
-
-	links_debug(`Expected fps: ${selection.fps.expected}, actual: ${selection.fps.actual}`);
-	links_debug(`Expected height: ${selection.height.expected}, actual: ${selection.height.actual}`);
-
-	var detectedQuality = `${selection.height.actual}p${selection.fps.actual}`;
-	var expectedQuality = `${selection.height.expected}p${selection.fps.expected}`;
-
-	if(	selection.fps.actual > selection.fps.expected
-		&& selection.height.actual >= selection.height.expected
-	) {
-		links_debug(`Detected ${detectedQuality} is greater than ${expectedQuality}`);
-		return true;
-	}
-
-	links_debug(`Detected ${detectedQuality} is lower than or equal to requested ${expectedQuality}`);
-	return false;
-}
-
 function mediaMerge(isSeparate)
 {
-	var format = 'matroska';
-	if(!isSeparate) format = 'mp4';
-
 	var mergeOpts = [
 	'-movflags', '+empty_moov',
-	'-c', 'copy',
-	'-f', format,
+	'-c:v', 'copy',
+	'-f', 'matroska',
 	'pipe:1'
 	];
 
 	if(isSeparate)
 	{
 		mergeOpts.unshift(...downloadOpts, '-i', 'async:cache:' + selection.videoSrc,
-			...downloadOpts, '-i', 'async:cache:' + selection.audioSrc);
+			...downloadOpts, '-i', 'async:cache:' + selection.audioSrc, '-c:a', 'copy');
 	}
 	else
-		mergeOpts.unshift(...downloadOpts, '-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
+		mergeOpts.unshift(...downloadOpts, '-i', 'async:cache:' + selection.mediaSrc, '-c:a', 'aac', '-ac', '2');
 
 	links_debug(`Starting ffmpeg with opts: ${JSON.stringify(mergeOpts)}`);
 
 	streamProcess = spawn(config.ffmpegPath, mergeOpts,
 	{ stdio: ['ignore', 'pipe', stdioConf] });
 
-	streamProcess.once('close', (code) =>
-	{
-		if(code !== null) links_debug(`FFmpeg exited with code: ${code}`);
-		streamProcess = null;
-		links_debug('Stream process wiped');
-	});
-
-	streamProcess.once('error', (error) => links_debug(error));
-
-	return streamProcess.stdout;
-}
-
-function videoEncode(isSeparate)
-{
-	var format = 'matroska';
-	if(!isSeparate) format = 'mp4';
-
-	var encodeOpts = [
-	'-movflags', '+empty_moov',
-	'-c:v', 'libx264',
-	'-vf', 'fps=30',
-	'-pix_fmt', 'yuv420p',
-	'-preset', 'superfast',
-	'-level:v', '4.1',
-	'-b:v', config.videoBitrate + 'M',
-	'-maxrate', config.videoBitrate + 'M',
-	'-c:a', 'copy',
-	'-metadata', 'title=Cast to TV - Software Encoded Stream',
-	'-f', format,
-	'pipe:1'
-	];
-
-	if(isSeparate)
-	{
-		encodeOpts.unshift(...downloadOpts, '-i', 'async:cache:' + selection.videoSrc,
-			...downloadOpts, '-i', 'async:cache:' + selection.audioSrc);
-	}
-	else
-		encodeOpts.unshift(...downloadOpts, '-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
-
-	links_debug(`Starting ffmpeg with opts: ${JSON.stringify(encodeOpts)}`);
-
-	streamProcess = spawn(config.ffmpegPath, encodeOpts,
-	{ stdio: ['ignore', 'pipe', stdioConf] });
+	/* Increase download buffer to 16MB */
+	streamProcess.stdout._readableState.highWaterMark = 1024 * 1024 * 16;
 
 	streamProcess.once('close', (code) =>
 	{
-		if(code !== null) links_debug(`FFmpeg exited with code: ${code}`);
-		streamProcess = null;
-		links_debug('Stream process wiped');
+		isStreaming = false;
+
+		if(code !== null)
+			links_debug(`FFmpeg exited with code: ${code}`);
+
+		streamProcess.removeListener('error', links_debug);
+		links_debug('FFmpeg closed');
 	});
 
-	streamProcess.once('error', (error) => links_debug(error));
-
-	return streamProcess.stdout;
-}
-
-function vaapiEncode(isSeparate)
-{
-	var format = 'matroska';
-	if(!isSeparate) format = 'mp4';
-
-	var encodeOpts = [
-	'-movflags', '+empty_moov',
-	'-c:v', 'h264_vaapi',
-	'-vf', 'fps=30,format=nv12,hwmap',
-	'-level:v', '4.1',
-	'-b:v', config.videoBitrate + 'M',
-	'-maxrate', config.videoBitrate + 'M',
-	'-c:a', 'copy',
-	'-metadata', 'title=Cast to TV - VAAPI Encoded Stream',
-	'-f', format,
-	'pipe:1'
-	];
-
-	if(isSeparate)
-	{
-		encodeOpts.unshift(...downloadOpts, '-i', 'async:cache:' + selection.videoSrc,
-			...downloadOpts, '-i', 'async:cache:' + selection.audioSrc);
-	}
-	else
-		encodeOpts.unshift(...downloadOpts, '-i', 'async:cache:' + selection.mediaSrc, '-bsf:a', 'aac_adtstoasc');
-
-	encodeOpts.unshift('-vaapi_device', '/dev/dri/renderD128');
-	links_debug(`Starting ffmpeg with opts: ${JSON.stringify(encodeOpts)}`);
-
-	streamProcess = spawn(config.ffmpegPath, encodeOpts,
-	{ stdio: ['ignore', 'pipe', stdioConf] });
-
-	streamProcess.once('close', (code) =>
-	{
-		if(code !== null) links_debug(`FFmpeg exited with code: ${code}`);
-		streamProcess = null;
-		links_debug('Stream process wiped');
-	});
-
-	streamProcess.once('error', (error) => links_debug(error));
-
+	streamProcess.once('error', links_debug);
 	return streamProcess.stdout;
 }
