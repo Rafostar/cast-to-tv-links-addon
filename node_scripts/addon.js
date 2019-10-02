@@ -20,7 +20,7 @@ const downloadOpts = [
 	'-timeout', '200000',
 	'-reconnect', '1',
 	'-reconnect_streamed', '1',
-	'-reconnect_at_eof', '1',
+	'-reconnect_at_eof', '0',
 	'-reconnect_delay_max', '0'
 ];
 
