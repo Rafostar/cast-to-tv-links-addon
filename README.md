@@ -52,7 +52,7 @@ Some of the options that might need explaining are:
   * Best seekable - tries to pick up videos with formats that will allow seeking using top bar remote. In this mode youtube-dl is only used to abtain direct link to video and files are not downloaded locally.
   * Best quality - selects videos with best possible quality (not always seekable) and if necessary downloads and merges or transcodes them locally (on the fly) while sending output directly to the receiver.
 
-* Preferred and fallback subtitles languages - first and second best choice when selecting video captions (if preferred lang. is not available for a particular video, fallback lang. is used). Fill those fields with two letters language codes (codes table can be found in [wikipedia](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)). If you do not want video captions, then fill those fields with words not representing any of the lang. codes (e.g: none).
+* Preferred and fallback subtitles languages - first and second best choice when selecting video captions (if preferred lang. is not available for a particular video, fallback lang. is used). If you do not want video captions, then fill those fields with words not representing any of the lang. codes (e.g: none).
 
 ## Info for translators
 All translatable files are in the main extension.<br>
