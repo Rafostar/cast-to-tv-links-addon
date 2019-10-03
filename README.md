@@ -15,13 +15,12 @@ Web links casting support for GNOME Shell Extension Cast to TV.
 * All [youtube-dl compatible sites](https://ytdl-org.github.io/youtube-dl/supportedsites.html) are supported
 * Constant video quality throughout playback
 * No commercials
-* Supports captions
+* Supports captions/subtitles
 * Allows disabling VP9 codec
-* Tries to pick up videos that do not exceed configured fps, otherwise transcodes them to 30 fps on the fly
 * Does not require Chrome/Chromium browser
 
 ## Requirements
-* [Cast to TV](https://github.com/Rafostar/gnome-shell-extension-cast-to-tv) (version 9 or later)
+* [Cast to TV](https://github.com/Rafostar/gnome-shell-extension-cast-to-tv) (version 11 or later)
 * [youtube-dl](https://ytdl-org.github.io/youtube-dl/index.html)
 
 Always use the newest possible youtube-dl version.
@@ -33,7 +32,7 @@ git clone https://github.com/Rafostar/cast-to-tv-links-addon.git
 cd cast-to-tv-links-addon
 make install
 ```
-After installing restart gnome-shell and enable the newly added extension.
+After installing **restart gnome-shell** and **enable** the newly added extension.
 
 **Before using this Add-on** you also **must** install some additional npm packages.<br>
 Go to `Cast Settings -> Modules` and click `Install npm modules` button.<br>
@@ -49,8 +48,8 @@ After installing a new "Add-ons" tab will be added to the extension settings.
 
 Some of the options that might need explaining are:
 * Preferred format
-  * Best seekable - tries to pick up videos with formats that will allow seeking using top bar remote. In this mode youtube-dl is only used to abtain direct link to video and files are not downloaded locally.
-  * Best quality - selects videos with best possible quality (not always seekable) and if necessary downloads and merges or transcodes them locally (on the fly) while sending output directly to the receiver.
+  * **Best seekable** - tries to pick up videos with formats that will allow seeking using top bar remote. In this mode youtube-dl is only used to obtain direct link to video and **files are not downloaded locally**.
+  * **Best quality** - selects videos with best possible quality (not always seekable) and **if necessary downloads them to RAM** for media merging (on the fly) while sending output directly to the receiver.
 
 * Preferred and fallback subtitles languages - first and second best choice when selecting video captions (if preferred lang. is not available for a particular video, fallback lang. is used). If you do not want video captions, then fill those fields with words not representing any of the lang. codes (e.g: none).
 
