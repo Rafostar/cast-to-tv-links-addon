@@ -145,7 +145,6 @@ function mediaMerge(req, res, selection, config, isSeparate)
 	const onStreamClose = function(code)
 	{
 		isStreaming = false;
-		req.removeListener('close', onReqClose);
 
 		if(code !== null)
 			links_debug(`FFmpeg exited with code: ${code}`);
