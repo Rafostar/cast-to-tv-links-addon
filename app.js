@@ -18,7 +18,7 @@ imports.searchPath.shift();
 const METADATA_DOMAIN = 'cast-to-tv-links-addon';
 const TEMP_DIR = shared.tempDir + '/links-addon';
 const NODE_PATH = (GLib.find_program_in_path('nodejs') || GLib.find_program_in_path('node'));
-const ENCODE_FORMATS = readFromFile(LOCAL_PATH + '/encode-formats.json');
+const ENCODE_FORMATS = Helper.readFromFile(LOCAL_PATH + '/encode-formats.json');
 const MUSIC_FORMATS = ['aac', 'mp3', 'm4a', 'vorbis', 'wav', 'opus', 'flac'];
 const PICURE_FORMATS = ['bmp', 'gif', 'jpeg', 'jpg', 'png', 'webp'];
 
@@ -66,7 +66,7 @@ class linkEntry
 		let iconTheme = Gtk.IconTheme.get_default();
 		if(iconTheme.has_icon('cast-to-tv')) this.window.set_icon_name('cast-to-tv');
 		else {
-			try { this.window.set_icon_from_file(mainExtPath + '/appIcon/cast-to-tv.svg'); }
+			try { this.window.set_icon_from_file(MAIN_PATH + '/appIcon/cast-to-tv.svg'); }
 			catch(err) { this.window.set_icon_name('application-x-executable'); }
 		}
 
@@ -234,10 +234,7 @@ class linkEntry
 			this.castButton.set_sensitive(true);
 		});
 
-		readOutputAsync(stream, (out) =>
-		{
-			completeOutput += out;
-		});
+		Helper.readOutputAsync(stream, (out) => completeOutput += out);
 	}
 
 	_restoreInfoDefaults()
@@ -373,54 +370,6 @@ class linkEntry
 			GLib.file_set_contents(shared.selectionPath, JSON.stringify(selection, null, 1));
 		}
 	}
-}
-
-function readFromFile(path)
-{
-	/* Check if file exists (EXISTS = 16) */
-	let fileExists = GLib.file_test(path, 16);
-	if(fileExists)
-	{
-		let [readOk, readFile] = GLib.file_get_contents(path);
-		if(readOk)
-		{
-			let data;
-
-			if(readFile instanceof Uint8Array)
-			{
-				try { data = JSON.parse(ByteArray.toString(readFile)); }
-				catch(err) { data = null; }
-			}
-			else
-			{
-				try { data = JSON.parse(readFile); }
-				catch(err) { data = null; }
-			}
-
-			return data;
-		}
-	}
-
-	return null;
-}
-
-function readOutputAsync(stream, callback)
-{
-	stream.read_line_async(GLib.PRIORITY_LOW, null, (source, res) =>
-	{
-		let out_fd, length, outStr;
-
-		[out_fd, length] = source.read_line_finish(res);
-
-		if(out_fd !== null)
-		{
-			if(out_fd instanceof Uint8Array) outStr = ByteArray.toString(out_fd);
-			else outStr = out_fd.toString();
-
-			callback(outStr);
-			readOutputAsync(source, callback);
-		}
-	});
 }
 
 GLib.mkdir_with_parents(TEMP_DIR, 448); // 700 in octal
