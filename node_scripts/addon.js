@@ -14,7 +14,7 @@ const downloadOpts = [
 	'-user_agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36',
 	'-multiple_requests', '0',
 	'-seekable', '1',
-	'-timeout', '200000',
+	'-timeout', '195000',
 	'-reconnect', '1',
 	'-reconnect_streamed', '1',
 	'-reconnect_at_eof', '0',
@@ -130,7 +130,7 @@ function mediaMerge(req, res, selection, config, isSeparate)
 			...downloadOpts, '-i', 'async:cache:' + selection.audioSrc, '-c:a', 'copy');
 	}
 	else
-		mergeOpts.unshift(...downloadOpts, '-i', 'async:cache:' + selection.mediaSrc, '-c:a', 'aac', '-ac', '2');
+		mergeOpts.unshift('-i', 'async:cache:' + selection.mediaSrc, '-c:a', 'aac', '-ac', '2');
 
 	links_debug(`Starting ffmpeg with opts: ${JSON.stringify(mergeOpts)}`);
 
@@ -147,9 +147,6 @@ function mediaMerge(req, res, selection, config, isSeparate)
 		isStreaming = false;
 		req.removeListener('close', onReqClose);
 
-		if(!streamProcess.stdout.destroyed)
-			streamProcess.stdout.destroy();
-
 		if(code !== null)
 			links_debug(`FFmpeg exited with code: ${code}`);
 
@@ -158,8 +155,6 @@ function mediaMerge(req, res, selection, config, isSeparate)
 
 	const onReqClose = function()
 	{
-		streamProcess.stdout.unpipe(res);
-
 		/* Destroys the buffer and causes ffmpeg exit */
 		if(!streamProcess.stdout.destroyed)
 			streamProcess.stdout.destroy();
