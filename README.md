@@ -49,7 +49,7 @@ After installing a new "Add-ons" tab will be added to the extension settings.
 Some of the options that might need explaining are:
 * Preferred format
   * **Best seekable** - tries to pick up videos with formats that will allow seeking using top bar remote. In this mode youtube-dl is only used to obtain direct link to video and **files are not downloaded locally**.
-  * **Best quality** - selects videos with best possible quality (not always seekable) and **if necessary downloads them to RAM** for media merging (on the fly) while sending output directly to the receiver.
+  * **Best quality** - selects best quality (not always seekable) videos and **if necessary downloads them to RAM** for media merging (on the fly) while sending output directly to the receiver.
 
 * Preferred and fallback subtitles languages - first and second best choice when selecting video captions (if preferred lang. is not available for a particular video, fallback lang. is used). If you do not want video captions, then fill those fields with words not representing any of the lang. codes (e.g: none).
 
