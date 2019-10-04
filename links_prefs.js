@@ -37,7 +37,7 @@ class LinksSettings extends Gtk.Grid
 		label = new SettingLabel(_("Preferred format"));
 		widget = new Gtk.ComboBoxText({ width_request: 220, halign: Gtk.Align.END });
 		widget.append('combined', _("Best seekable"));
-		widget.append('separate', _("Best quality"));
+		widget.append('separate', _("Best quality") + ' ' + _("(experimental)"));
 		Settings.bind('ytdl-mode', widget, 'active-id', Gio.SettingsBindFlags.DEFAULT);
 		this.attach(label, 0, 1, 1, 1);
 		this.attach(widget, 1, 1, 1, 1);
