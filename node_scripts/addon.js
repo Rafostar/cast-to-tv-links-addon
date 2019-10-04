@@ -5,11 +5,8 @@ var debug = require('debug');
 var links_debug = debug('links-addon');
 var ffmpeg_debug = debug('ffmpeg');
 
-var config;
-var selection;
-var isDirect;
-var isStreaming;
-var streamProcess = {};
+var isDirect = false;
+var isStreaming = false;
 
 const stdioConf = (ffmpeg_debug.enabled) ? 'inherit' : 'ignore';
 
@@ -24,10 +21,8 @@ const downloadOpts = [
 	'-reconnect_delay_max', '0'
 ];
 
-exports.handleSelection = function(selectionContents, configContents)
+exports.handleSelection = function(selection, config)
 {
-	config = configContents;
-	selection = selectionContents;
 	isDirect = false;
 
 	links_debug(`Obtained config: ${JSON.stringify(config)}`);
@@ -36,17 +31,11 @@ exports.handleSelection = function(selectionContents, configContents)
 
 exports.closeStream = function()
 {
-	if(isStreaming && streamProcess.exitCode === null)
-	{
-		process.kill(streamProcess.pid, 'SIGHUP');
-		links_debug(`Send close signal to stream process`);
-	}
-
-	isStreaming = false;
-	links_debug('Stream closed. Config and selection data wiped');
+	/* Function not used by this add-on */
+	return null;
 }
 
-exports.fileStream = function(req, res)
+exports.fileStream = function(req, res, selection, config)
 {
 	/* Prevent spawning more then one ffmpeg encode process */
 	if(isStreaming)
@@ -77,7 +66,9 @@ exports.fileStream = function(req, res)
 		return req.pipe(request.get(selection.mediaSrc)).pipe(res);
 	}
 
-	var isSeparate = (selection.videoSrc && selection.audioSrc) ? true : (selection.mediaSrc) ? false : null;
+	var isSeparate = (selection.videoSrc && selection.audioSrc) ?
+		true : (selection.mediaSrc) ? false : null;
+
 	if(isSeparate === null)
 	{
 		links_debug(`Invalid or missing selection info!`);
@@ -88,8 +79,7 @@ exports.fileStream = function(req, res)
 	if(isSeparate || selection.streamType == 'VIDEO_ENCODE')
 	{
 		links_debug('Media will be passed through FFmpeg');
-		isStreaming = true;
-		mediaMerge(isSeparate).pipe(res);
+		mediaMerge(req, res, selection, config, isSeparate);
 	}
 	else
 	{
@@ -97,36 +87,35 @@ exports.fileStream = function(req, res)
 		isDirect = true;
 		req.pipe(request.get(selection.mediaSrc)).pipe(res);
 	}
-
-	req.once('close', exports.closeStream);
 }
 
-exports.subsStream = function(req, res)
+exports.subsStream = function(req, res, selection, config)
 {
 	res.setHeader('Access-Control-Allow-Origin', '*');
 	return req.pipe(request.get(selection.subsSrc)).pipe(res);
 }
 
-exports.coverStream = function(req, res)
+exports.coverStream = function(req, res, selection, config)
 {
 	res.setHeader('Access-Control-Allow-Origin', '*');
 	res.setHeader('Content-Type', 'image/png');
 
-	var exist = fs.existsSync(selection.coverSrc);
-
-	if(exist)
+	fs.access(selection.coverSrc, fs.constants.F_OK, (err) =>
 	{
-		links_debug('Sending found media cover');
-		return fs.createReadStream(selection.coverSrc).pipe(res);
-	}
-	else
-	{
-		links_debug('Cover not found. Send status 204');
-		res.sendStatus(204);
-	}
+		if(err)
+		{
+			links_debug('Cover not found. Send status 204');
+			res.sendStatus(204);
+		}
+		else
+		{
+			links_debug('Sending found media cover');
+			fs.createReadStream(selection.coverSrc).pipe(res);
+		}
+	});
 }
 
-function mediaMerge(isSeparate)
+function mediaMerge(req, res, selection, config, isSeparate)
 {
 	var mergeOpts = [
 	'-movflags', '+empty_moov',
@@ -145,23 +134,41 @@ function mediaMerge(isSeparate)
 
 	links_debug(`Starting ffmpeg with opts: ${JSON.stringify(mergeOpts)}`);
 
-	streamProcess = spawn(config.ffmpegPath, mergeOpts,
+	var streamProcess = spawn(config.ffmpegPath, mergeOpts,
 	{ stdio: ['ignore', 'pipe', stdioConf] });
+
+	isStreaming = true;
 
 	/* Increase download buffer to 16MB */
 	streamProcess.stdout._readableState.highWaterMark = 1024 * 1024 * 16;
 
-	streamProcess.once('close', (code) =>
+	const onStreamClose = function(code)
 	{
 		isStreaming = false;
+		req.removeListener('close', onReqClose);
+
+		if(!streamProcess.stdout.destroyed)
+			streamProcess.stdout.destroy();
 
 		if(code !== null)
 			links_debug(`FFmpeg exited with code: ${code}`);
 
-		streamProcess.removeListener('error', links_debug);
 		links_debug('FFmpeg closed');
-	});
+	}
 
-	streamProcess.once('error', links_debug);
-	return streamProcess.stdout;
+	const onReqClose = function()
+	{
+		streamProcess.stdout.unpipe(res);
+
+		/* Destroys the buffer and causes ffmpeg exit */
+		if(!streamProcess.stdout.destroyed)
+			streamProcess.stdout.destroy();
+
+		links_debug('HTTP request closed');
+	}
+
+	streamProcess.once('exit', onStreamClose);
+	req.once('close', onReqClose);
+
+	streamProcess.stdout.pipe(res);
 }
