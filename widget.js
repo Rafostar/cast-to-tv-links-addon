@@ -12,7 +12,7 @@ var addonMenuItem = class linkMenu extends PopupMenu.PopupImageMenuItem
 	constructor()
 	{
 		super(_("Link"), 'web-browser-symbolic');
-		this.linkSignal = this.connect('activate', () =>
+		this.connect('activate', () =>
 		{
 			/* Close other possible opened extension windows */
 			GLib.spawn_command_line_async('pkill -SIGINT -f ' + MAIN_PATH + '/file-chooser|' +
@@ -21,11 +21,5 @@ var addonMenuItem = class linkMenu extends PopupMenu.PopupImageMenuItem
 			/* To not freeze gnome shell app needs to be run as separate process */
 			GLib.spawn_async(Local.path, ['/usr/bin/gjs', Local.path + '/app.js'], null, 0, null);
 		});
-
-		this.destroy = () =>
-		{
-			this.disconnect(this.linkSignal);
-			super.destroy();
-		}
 	}
 }
