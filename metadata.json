@@ -1,5 +1,5 @@
 {
-  "description": "Web links casting support for GNOME Shell Extension Cast to TV.\n\nCast to TV extension must be installed before any add-ons.\nAfter enabling this add-on go to Cast Settings -> Modules and click \"Install npm modules\" button.\n\nPlease use GitHub to report issues.", 
+  "description": "Web links casting support for GNOME Shell Extension Cast to TV.\nCast videos, music and pictures from internet\n\nCast to TV extension must be installed prior to any add-ons.\nAfter enabling this add-on go to Cast Settings \u2192 Modules and click \"Install npm modules\" button.\n\nPlease use GitHub to report issues.", 
   "extension-id": "cast-to-tv-links-addon", 
   "gettext-domain": "cast-to-tv-links-addon", 
   "name": "Cast to TV - Links Add-on", 
@@ -8,7 +8,8 @@
     "3.26", 
     "3.28", 
     "3.30", 
-    "3.32"
+    "3.32", 
+    "3.34"
   ], 
   "url": "https://github.com/Rafostar/cast-to-tv-links-addon", 
   "uuid": "cast-to-tv-links-addon@rafostar.github.com", 
