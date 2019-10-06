@@ -7,7 +7,7 @@
 Web links casting support for GNOME Shell Extension Cast to TV.
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/wiki/Rafostar/gnome-shell-extension-cast-to-tv/images/Add-ons/Links.png" width="65%" height="65%">
+<img src="https://raw.githubusercontent.com/wiki/Rafostar/gnome-shell-extension-cast-to-tv/images/Add-ons/Links.png">
 </p>
 
 ## Features
