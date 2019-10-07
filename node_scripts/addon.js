@@ -7,6 +7,7 @@ var ffmpeg_debug = debug('ffmpeg');
 
 var isDirect = false;
 var isStreaming = false;
+var streamData = null;
 
 const stdioConf = (ffmpeg_debug.enabled) ? 'inherit' : 'ignore';
 
@@ -31,8 +32,13 @@ exports.handleSelection = function(selection, config)
 
 exports.closeStream = function()
 {
-	/* Function not used by this add-on */
-	return null;
+	if(streamData && !streamData.destroyed)
+	{
+		streamData.destroy();
+		streamData = null;
+
+		links_debug('Stream data destroyed');
+	}
 }
 
 exports.fileStream = function(req, res, selection, config)
@@ -133,14 +139,15 @@ function mediaMerge(req, res, selection, config, isSeparate)
 		mergeOpts.unshift('-i', 'async:cache:' + selection.mediaSrc, '-c:a', 'aac', '-ac', '2');
 
 	links_debug(`Starting ffmpeg with opts: ${JSON.stringify(mergeOpts)}`);
+	isStreaming = true;
 
 	var streamProcess = spawn(config.ffmpegPath, mergeOpts,
 	{ stdio: ['ignore', 'pipe', stdioConf] });
 
-	isStreaming = true;
+	streamData = streamProcess.stdout;
 
 	/* Increase download buffer to 16MB */
-	streamProcess.stdout._readableState.highWaterMark = 1024 * 1024 * 16;
+	streamData._readableState.highWaterMark = 1024 * 1024 * 16;
 
 	const onStreamClose = function(code)
 	{
@@ -155,8 +162,7 @@ function mediaMerge(req, res, selection, config, isSeparate)
 	const onReqClose = function()
 	{
 		/* Destroys the buffer and causes ffmpeg exit */
-		if(!streamProcess.stdout.destroyed)
-			streamProcess.stdout.destroy();
+		exports.closeStream();
 
 		links_debug('HTTP request closed');
 	}
@@ -164,5 +170,5 @@ function mediaMerge(req, res, selection, config, isSeparate)
 	streamProcess.once('exit', onStreamClose);
 	req.once('close', onReqClose);
 
-	streamProcess.stdout.pipe(res);
+	streamData.pipe(res);
 }
