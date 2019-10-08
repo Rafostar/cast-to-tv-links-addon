@@ -33,11 +33,6 @@ zip-file: _build
 	zip -qr $(UUID).zip $(ZIPFILES)
 
 # Build and install #
-install: zip-file
-	mkdir -p $(INSTALLPATH)/$(UUID)
-	unzip -qo $(UUID).zip -d $(INSTALLPATH)/$(UUID)
-
-# Build and install #
 install: sync-translations
 ifeq ($(CUSTOMPATH),)
 	glib-compile-schemas ./schemas/
