@@ -17,6 +17,7 @@ var addonMenuItem = class linkMenu extends PopupMenu.PopupImageMenuItem
 	constructor()
 	{
 		super(_("Link"), 'web-browser-symbolic');
+
 		this.connect('activate', () =>
 		{
 			Helper.closeOtherApps(MAIN_PATH, EXTENSIONS_PATH);

@@ -2,14 +2,14 @@ imports.gi.versions.Gtk = '3.0';
 
 const { Gio, Gtk } = imports.gi;
 const Local = imports.misc.extensionUtils.getCurrentExtension();
-const Gettext = imports.gettext;
-const GettextDomain = Gettext.domain(Local.metadata['gettext-domain']);
-const _ = GettextDomain.gettext;
-const extensionsPath = Local.path.substring(0, Local.path.lastIndexOf('/'));
-const mainPath = extensionsPath + '/cast-to-tv@rafostar.github.com';
+const Gettext = imports.gettext.domain(Local.metadata['gettext-domain']);
+
+const EXTENSIONS_PATH = Local.path.substring(0, Local.path.lastIndexOf('/'));
+const MAIN_PATH = EXTENSIONS_PATH + '/cast-to-tv@rafostar.github.com';
+const _ = Gettext.gettext;
 
 /* Imports from main extension */
-imports.searchPath.unshift(mainPath);
+imports.searchPath.unshift(MAIN_PATH);
 const { SettingLabel } = imports.prefs_shared;
 const Helper = imports.helper;
 const Settings = Helper.getSettings(Local.path, Local.metadata['settings-schema']);
