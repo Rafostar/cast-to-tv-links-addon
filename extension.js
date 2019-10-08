@@ -10,7 +10,6 @@ const EXTENSIONS_PATH = Local.path.substring(0, Local.path.lastIndexOf('/'));
 const MAIN_PATH = EXTENSIONS_PATH + '/cast-to-tv@rafostar.github.com';
 const GETTEXT_DOMAIN = Local.metadata['gettext-domain'];
 const EXTENSION_ID = Local.metadata['extension-id'];
-const DELAY = 1500;
 
 /* Imports from main extension */
 imports.searchPath.unshift(MAIN_PATH);
@@ -25,7 +24,7 @@ function init()
 
 function enable()
 {
-	Addons.enableAddon(EXTENSION_ID, Widget, DELAY);
+	Addons.enableAddon(EXTENSION_ID, Widget);
 }
 
 function disable()
