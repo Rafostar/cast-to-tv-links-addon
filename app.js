@@ -20,11 +20,10 @@ const TEMP_DIR = shared.tempDir + '/links-addon';
 const NODE_PATH = (GLib.find_program_in_path('nodejs') || GLib.find_program_in_path('node'));
 const ENCODE_FORMATS = Helper.readFromFile(LOCAL_PATH + '/encode-formats.json');
 const MUSIC_FORMATS = ['aac', 'mp3', 'm4a', 'vorbis', 'wav', 'opus', 'flac'];
-const PICURE_FORMATS = ['bmp', 'gif', 'jpeg', 'jpg', 'png', 'webp'];
+const PICTURE_FORMATS = ['bmp', 'gif', 'jpeg', 'jpg', 'png', 'webp'];
 
 const GettextDomain = Gettext.domain(METADATA_DOMAIN);
 const _ = GettextDomain.gettext;
-Helper.initTranslations(LOCAL_PATH, 'cast-to-tv-links-addon');
 
 class linkEntry
 {
@@ -33,6 +32,7 @@ class linkEntry
 		this.title = 'Cast to TV';
 		this.imagePath = TEMP_DIR + '/image';
 		GLib.set_prgname(this.title);
+		Helper.initTranslations(LOCAL_PATH, 'cast-to-tv-links-addon');
 		this.application = new Gtk.Application();
 		this.application.connect('activate', () => this._onActivate());
 		this.application.connect('startup', () => this._buildUI());
@@ -344,7 +344,7 @@ class linkEntry
 
 	_isPicture(mediaInfo)
 	{
-		var isPicture = PICURE_FORMATS.includes(mediaInfo.container);
+		var isPicture = PICTURE_FORMATS.includes(mediaInfo.container);
 		return isPicture;
 	}
 
