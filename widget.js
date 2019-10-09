@@ -1,4 +1,3 @@
-const { GLib } = imports.gi;
 const PopupMenu = imports.ui.popupMenu;
 const Local = imports.misc.extensionUtils.getCurrentExtension();
 const Gettext = imports.gettext.domain(Local.metadata['gettext-domain']);
@@ -20,7 +19,7 @@ var addonMenuItem = class linkMenu extends PopupMenu.PopupImageMenuItem
 
 		this.connect('activate', () =>
 		{
-			Helper.closeOtherApps(MAIN_PATH, EXTENSIONS_PATH);
+			Helper.closeOtherApps(MAIN_PATH);
 			Helper.startApp(Local.path);
 		});
 	}
