@@ -12,8 +12,9 @@ const _ = Gettext.gettext;
 imports.searchPath.unshift(MAIN_PATH);
 const { SettingLabel } = imports.prefs_shared;
 const Helper = imports.helper;
-const Settings = Helper.getSettings(Local.path, Local.metadata['settings-schema']);
 imports.searchPath.shift();
+
+const Settings = Helper.getSettings(Local.path, Local.metadata['settings-schema']);
 
 function init()
 {
@@ -96,11 +97,6 @@ class LinksSettings extends Gtk.Grid
 		Settings.bind('fallback-lang', widget, 'text', Gio.SettingsBindFlags.DEFAULT);
 		this.attach(label, 0, 7, 1, 1);
 		this.attach(widget, 1, 7, 1, 1);
-	}
-
-	destroy()
-	{
-		super.destroy();
 	}
 }
 
