@@ -2,11 +2,10 @@ imports.gi.versions.Gtk = '3.0';
 
 const { Gio, Gtk } = imports.gi;
 const Local = imports.misc.extensionUtils.getCurrentExtension();
-const Gettext = imports.gettext.domain(Local.metadata['gettext-domain']);
 
 const EXTENSIONS_PATH = Local.path.substring(0, Local.path.lastIndexOf('/'));
+const LOCAL_PATH = EXTENSIONS_PATH + '/cast-to-tv-links-addon@rafostar.github.com';
 const MAIN_PATH = EXTENSIONS_PATH + '/cast-to-tv@rafostar.github.com';
-const _ = Gettext.gettext;
 
 /* Imports from main extension */
 imports.searchPath.unshift(MAIN_PATH);
@@ -14,11 +13,14 @@ const { SettingLabel } = imports.prefs_shared;
 const Helper = imports.helper;
 imports.searchPath.shift();
 
-const Settings = Helper.getSettings(Local.path, Local.metadata['settings-schema']);
+const Metadata = Helper.readFromFile(LOCAL_PATH + '/metadata.json');
+const Settings = Helper.getSettings(LOCAL_PATH, Metadata['settings-schema']);
+const Gettext = imports.gettext.domain(Metadata['gettext-domain']);
+const _ = Gettext.gettext;
 
 function init()
 {
-	Helper.initTranslations(Local.path, Local.metadata['gettext-domain']);
+	Helper.initTranslations(LOCAL_PATH, Metadata['gettext-domain']);
 }
 
 class LinksSettings extends Gtk.Grid
