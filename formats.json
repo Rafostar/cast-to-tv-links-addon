@@ -1,0 +1,28 @@
+{
+  "ENCODE": [
+    "http_dash_segments",
+    "m3u8",
+    "m3u8_native",
+    "f4m",
+    "rtsp",
+    "rtmp",
+    "rtmpe"
+  ],
+  "MUSIC": [
+    "aac",
+    "mp3",
+    "m4a",
+    "vorbis",
+    "wav",
+    "opus",
+    "flac"
+  ],
+  "PICTURE": [
+    "bmp",
+    "gif",
+    "jpeg",
+    "jpg",
+    "png",
+    "webp"
+  ]
+}

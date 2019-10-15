@@ -18,9 +18,7 @@ imports.searchPath.shift();
 const METADATA_DOMAIN = 'cast-to-tv-links-addon';
 const TEMP_DIR = shared.tempDir + '/links-addon';
 const NODE_PATH = (GLib.find_program_in_path('nodejs') || GLib.find_program_in_path('node'));
-const ENCODE_FORMATS = Helper.readFromFile(LOCAL_PATH + '/encode-formats.json');
-const MUSIC_FORMATS = ['aac', 'mp3', 'm4a', 'vorbis', 'wav', 'opus', 'flac'];
-const PICTURE_FORMATS = ['bmp', 'gif', 'jpeg', 'jpg', 'png', 'webp'];
+const FORMATS = Helper.readFromFile(LOCAL_PATH + '/formats.json');
 
 const GettextDomain = Gettext.domain(METADATA_DOMAIN);
 const _ = GettextDomain.gettext;
@@ -317,7 +315,7 @@ class linkEntry
 		if(mediaInfo.protocol)
 		{
 			selection.protocol = mediaInfo.protocol;
-			if(ENCODE_FORMATS && ENCODE_FORMATS.includes(selection.protocol))
+			if(FORMATS && FORMATS.ENCODE.includes(selection.protocol))
 			{
 				selection.streamType = 'VIDEO_ENCODE';
 				return selection;
@@ -338,13 +336,13 @@ class linkEntry
 
 	_isMusic(mediaInfo)
 	{
-		var isMusic = MUSIC_FORMATS.includes(mediaInfo.container);
+		var isMusic = (FORMATS && FORMATS.MUSIC.includes(mediaInfo.container));
 		return isMusic;
 	}
 
 	_isPicture(mediaInfo)
 	{
-		var isPicture = PICTURE_FORMATS.includes(mediaInfo.container);
+		var isPicture = (FORMATS && FORMATS.PICTURE.includes(mediaInfo.container));
 		return isPicture;
 	}
 

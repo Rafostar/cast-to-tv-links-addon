@@ -5,18 +5,22 @@ var parser_debug = debug('parser');
 var ytdl_debug = debug('ytdl');
 var JSONStream = require('JSONStream');
 var request = require('request');
-var { spawn, spawnSync } = require('child_process');
+var { spawn } = require('child_process');
 
 /* Cast to TV imports */
 const MAIN_EXT_PATH = path.join(__dirname + '/../../../cast-to-tv@rafostar.github.com');
 var gnome = require(MAIN_EXT_PATH + '/node_scripts/gnome');
 var shared = require(MAIN_EXT_PATH + '/shared');
+var formats = null;
 
 const SCHEMA_DIR = path.join(__dirname + '/../../schemas');
 const TEMP_DIR = shared.tempDir + '/links-addon';
 const IMAGE_PATH = TEMP_DIR + '/image';
-const PICTURE_FORMATS = ['bmp', 'gif', 'jpeg', 'jpg', 'png', 'webp'];
 const LINK = process.argv[2];
+
+const FORMATS_PATH = path.join(__dirname + '/../../formats.json');
+if(fs.existsSync(FORMATS_PATH))
+	formats = JSON.parse(fs.readFileSync(FORMATS_PATH));
 
 if(!LINK)
 {
@@ -119,13 +123,8 @@ function parseLink(Url, opts)
 
 	var disallowed = '';
 
-	const formatsPath = path.join(__dirname + '/../../encode-formats.json');
-	var exist = fs.existsSync(formatsPath);
-	if(exist)
-	{
-		var formats = JSON.parse(fs.readFileSync(formatsPath));
-		formats.forEach(format => disallowed += `[protocol!=${format}]`);
-	}
+	if(formats && formats.ENCODE)
+		formats.ENCODE.forEach(format => disallowed += `[protocol!=${format}]`);
 
 	var bestSeekable = `best${params}${fps}${disallowed}/best${params}${disallowed}/best${disallowed}/best`;
 	var bestAll = `best${params}${fps}/best${params}/best`;
@@ -225,7 +224,7 @@ function parseLink(Url, opts)
 			}
 			else
 			{
-				var isPicture = PICTURE_FORMATS.includes(data.ext);
+				var isPicture = (formats && formats.PICTURE && formats.PICTURE.includes(data.ext));
 
 				if(data.url && isPicture)
 				{
