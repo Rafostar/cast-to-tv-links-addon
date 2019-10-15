@@ -362,10 +362,10 @@ class linkEntry
 			if(mediaInfo.subtitles) selection.subsSrc = mediaInfo.subtitles.url;
 
 			/* Set playback list */
-			GLib.file_set_contents(shared.listPath, JSON.stringify(playlist, null, 1));
+			Helper.writeToFile(shared.listPath, playlist);
 
 			/* Save selection to file */
-			GLib.file_set_contents(shared.selectionPath, JSON.stringify(selection, null, 1));
+			Helper.writeToFile(shared.selectionPath, selection);
 		}
 	}
 }
