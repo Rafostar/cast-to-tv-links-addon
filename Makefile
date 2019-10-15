@@ -25,6 +25,7 @@ sync-translations:
 	$(info Fetching latest translations from git...)
 	git clone --depth 1 https://github.com/Rafostar/gnome-shell-extension-cast-to-tv.git $(TRANSLATIONSPATH)
 	$(MAKE) -C $(TRANSLATIONSPATH) compilemo
+	rm -rf ./locale
 	mv -f $(TRANSLATIONSPATH)/locale_addons/$(GETTEXT) ./locale
 	rm -rf $(TRANSLATIONSPATH)
 
