@@ -4,23 +4,13 @@ var request = require('request');
 var debug = require('debug');
 var links_debug = debug('links-addon');
 var ffmpeg_debug = debug('ffmpeg');
+var randomAgent = require('./random-agent');
 
 var isDirect = false;
 var isStreaming = false;
 var streamData = null;
 
 const stdioConf = (ffmpeg_debug.enabled) ? 'inherit' : 'ignore';
-
-const downloadOpts = [
-	'-user_agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36',
-	'-multiple_requests', '0',
-	'-seekable', '1',
-	'-timeout', '195000',
-	'-reconnect', '1',
-	'-reconnect_streamed', '1',
-	'-reconnect_at_eof', '0',
-	'-reconnect_delay_max', '0'
-];
 
 exports.handleSelection = function(selection, config)
 {
@@ -121,6 +111,20 @@ exports.coverStream = function(req, res, selection, config)
 	});
 }
 
+function getDownloadOpts()
+{
+	return [
+		'-user_agent', randomAgent(),
+		'-multiple_requests', '0',
+		'-seekable', '1',
+		'-timeout', '195000',
+		'-reconnect', '1',
+		'-reconnect_streamed', '1',
+		'-reconnect_at_eof', '0',
+		'-reconnect_delay_max', '0'
+	];
+}
+
 function mediaMerge(req, res, selection, config, isSeparate)
 {
 	var mergeOpts = [
@@ -132,6 +136,7 @@ function mediaMerge(req, res, selection, config, isSeparate)
 
 	if(isSeparate)
 	{
+		const downloadOpts = getDownloadOpts();
 		mergeOpts.unshift(...downloadOpts, '-i', 'async:cache:' + selection.videoSrc,
 			...downloadOpts, '-i', 'async:cache:' + selection.audioSrc, '-c:a', 'copy');
 	}
