@@ -25,7 +25,11 @@ Web links casting support for GNOME Shell Extension Cast to TV.
 
 Always use the newest possible youtube-dl version.
 
-## Installation
+## Download
+
+[<img src="https://github.com/Rafostar/gnome-shell-extension-cast-to-tv/wiki/images/Gnome-Extensions.png" width="30%" height="30%">](https://extensions.gnome.org/extension/2242/cast-to-tv-links-add-on)
+
+### Installation from source code
 ```
 cd /tmp
 git clone https://github.com/Rafostar/cast-to-tv-links-addon.git
@@ -34,11 +38,11 @@ make install
 ```
 After installing **restart gnome-shell** and **enable** the newly added extension.
 
+## How to use
 **Before using this Add-on** you also **must** install some additional npm packages.<br>
 Go to `Cast Settings -> Modules` and click `Install npm modules` button.<br>
 This step will install additional packages and automatically restart Cast to TV server.
 
-## How to use
 Launch app from newly added `Link` menu entry in `Cast media` submenu.<br>
 Simply write/paste link to the website containing the requested media content and click `Cast link` button or achieve the same effect even simpler by dragging link into the text field.
 
