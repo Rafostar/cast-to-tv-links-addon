@@ -12,6 +12,7 @@ const MAIN_PATH = EXTENSIONS_PATH + '/cast-to-tv@rafostar.github.com';
 /* Imports from main extension */
 imports.searchPath.unshift(MAIN_PATH);
 const Helper = imports.helper;
+const Soup = imports.soup;
 const shared = imports.shared.module.exports;
 imports.searchPath.shift();
 
@@ -20,6 +21,7 @@ const TEMP_DIR = shared.tempDir + '/links-addon';
 const NODE_PATH = (GLib.find_program_in_path('nodejs') || GLib.find_program_in_path('node'));
 const FORMATS = Helper.readFromFile(LOCAL_PATH + '/formats.json');
 
+const CastSettings = Helper.getSettings(MAIN_PATH);
 const GettextDomain = Gettext.domain(METADATA_DOMAIN);
 const _ = GettextDomain.gettext;
 
@@ -41,6 +43,14 @@ class linkEntry
 	{
 		if(this.castButton) this.castButton.grab_focus();
 		if(this.window) this.window.show_all();
+
+		if(!Soup.client)
+		{
+			Soup.createClient(CastSettings.get_int('listening-port'));
+			CastSettings.connect('changed::listening-port', () =>
+				Soup.client.setNodePort(CastSettings.get_int('listening-port'))
+			);
+		}
 	}
 
 	_buildUI()
@@ -217,22 +227,27 @@ class linkEntry
 			null, GLib.SpawnFlags.DO_NOT_REAP_CHILD, null);
 
 		let stream = new Gio.DataInputStream({ base_stream: new Gio.UnixInputStream({ fd: stdout }) });
+		Helper.readOutputAsync(stream, (out) => completeOutput += out);
 
 		GLib.child_watch_add(GLib.PRIORITY_LOW, pid, () =>
 		{
+			var info = null;
+
 			try {
-				var info = JSON.parse(completeOutput);
-				this._fillInfo(info);
-				this._setTempFiles(info);
+				info = JSON.parse(completeOutput);
 			}
 			catch(err) {
 				this._fillInfo({});
 			}
 
+			if(info)
+			{
+				this._fillInfo(info);
+				this._setTempFiles(info);
+			}
+
 			this.castButton.set_sensitive(true);
 		});
-
-		Helper.readOutputAsync(stream, (out) => completeOutput += out);
 	}
 
 	_restoreInfoDefaults()
@@ -359,16 +374,16 @@ class linkEntry
 
 		if(selection && playlist)
 		{
-			if(mediaInfo.subtitles) selection.subsSrc = mediaInfo.subtitles.url;
+			if(mediaInfo.subtitles)
+				selection.subsSrc = mediaInfo.subtitles.url;
 
-			/* Set playback list */
-			Helper.writeToFile(shared.listPath, playlist);
-
-			/* Save selection to file */
-			Helper.writeToFile(shared.selectionPath, selection);
+			Soup.client.postPlaybackData({
+				playlist: playlist,
+				selection: selection
+			});
 		}
 	}
 }
 
-GLib.mkdir_with_parents(TEMP_DIR, 448); // 700 in octal
+GLib.mkdir_with_parents(TEMP_DIR, 493); // 755 in octal
 let app = new linkEntry();

@@ -1,39 +1,39 @@
-var fs = require('fs');
-var path = require('path');
-var debug = require('debug');
-var parser_debug = debug('parser');
-var ytdl_debug = debug('ytdl');
-var JSONStream = require('JSONStream');
-var request = require('request');
-var { spawn } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const debug = require('debug');
+const parser_debug = debug('parser');
+const ytdl_debug = debug('ytdl');
+const JSONStream = require('JSONStream');
+const request = require('request');
+const { spawn } = require('child_process');
+
+const MAIN_EXT_PATH = path.join(__dirname + '/../../../cast-to-tv@rafostar.github.com');
 
 /* Cast to TV imports */
-const MAIN_EXT_PATH = path.join(__dirname + '/../../../cast-to-tv@rafostar.github.com');
-var gnome = require(MAIN_EXT_PATH + '/node_scripts/gnome');
-var shared = require(MAIN_EXT_PATH + '/shared');
-var formats = null;
+const gnome = require(MAIN_EXT_PATH + '/node_scripts/gnome');
+const shared = require(MAIN_EXT_PATH + '/shared');
 
 const SCHEMA_DIR = path.join(__dirname + '/../../schemas');
 const TEMP_DIR = shared.tempDir + '/links-addon';
 const IMAGE_PATH = TEMP_DIR + '/image';
+const FORMATS_PATH = path.join(__dirname + '/../../formats.json');
 const LINK = process.argv[2];
 
-const FORMATS_PATH = path.join(__dirname + '/../../formats.json');
-if(fs.existsSync(FORMATS_PATH))
-	formats = JSON.parse(fs.readFileSync(FORMATS_PATH));
+var formats = null;
 
 if(!LINK)
 {
 	parser_debug('No link provided!');
-	process.exit(1);
+	return process.exit(1);
 }
-else
-{
-	var tempExist = fs.existsSync(TEMP_DIR);
-	if(!tempExist) fs.mkdirSync(TEMP_DIR);
 
-	gnome.loadSchema("org.gnome.shell.extensions.cast-to-tv-links-addon", SCHEMA_DIR);
-}
+if(!fs.existsSync(TEMP_DIR))
+	fs.mkdirSync(TEMP_DIR);
+
+if(fs.existsSync(FORMATS_PATH))
+	formats = JSON.parse(fs.readFileSync(FORMATS_PATH));
+
+gnome.loadSchema('org.gnome.shell.extensions.cast-to-tv-links-addon', SCHEMA_DIR);
 
 var linkOpts = {
 	path: getPath(),
@@ -134,13 +134,23 @@ function parseLink(Url, opts)
 
 	parser_debug(`Requested ytdl format: ${format}`);
 
-	var ytdlOpts = ['--ignore-config', '--socket-timeout', '3', '--all-subs', '--playlist-end', '1', '-f', format, '-j', Url];
-	var youtubedl = spawn(opts.path, ytdlOpts);
+	var ytdlOpts = [
+		'--ignore-config',
+		'--socket-timeout', '3',
+		'--all-subs',
+		'--playlist-end', '1',
+		'-f', format,
+		'-j', Url
+	];
 
-	youtubedl.once('close', async(code) =>
+	const onYtdlExit = async function(code)
 	{
-		if(code !== 0) return parser_debug(`youtube-dl error code: ${code}`);
-		else if(!info) return parser_debug(`Unable to obtain link info!`);
+		youtubedl.removeListener('error', onYtdlError);
+
+		if(code)
+			return parser_debug(`youtube-dl error code: ${code}`);
+		else if(!info)
+			return parser_debug(`Unable to obtain link info!`);
 
 		if(info.protocol == 'http_dash_segments')
 		{
@@ -149,28 +159,44 @@ function parseLink(Url, opts)
 
 			if(isInvalid)
 			{
-				if(linkOpts.mode !== 'combined')
-				{
-					linkOpts.mode = 'combined';
-					return parseLink(LINK, linkOpts);
-				}
-				else
-				{
+				if(linkOpts.mode === 'combined')
 					return process.exit(1);
-				}
+
+				linkOpts.mode = 'combined';
+				return parseLink(LINK, linkOpts);
 			}
 		}
 
 		if(!parser_debug.enabled && !ytdl_debug.enabled)
+			return console.log(JSON.stringify(info));
+
+		parser_debug('\nSELECTED INFO:');
+		parser_debug(info);
+	}
+
+	const onYtdlError = function(err)
+	{
+		youtubedl.removeListener('exit', onYtdlExit);
+
+		var errMsg;
+
+		switch(err.code)
 		{
-			console.log(JSON.stringify(info));
+			case 'ENOENT':
+				errMsg = "File does not exist: " + linkOpts.path;
+				break;
+			default:
+				errMsg = err.message;
+				break;
 		}
-		else
-		{
-			parser_debug('\nSELECTED INFO:');
-			parser_debug(info);
-		}
-	});
+
+		spawn('notify-send', ['Cast to TV', errMsg]);
+	}
+
+	var youtubedl = spawn(opts.path, ytdlOpts);
+
+	youtubedl.on('error', onYtdlError);
+	youtubedl.once('exit', onYtdlExit);
 
 	var setResolution = (data) =>
 	{
