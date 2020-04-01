@@ -4,12 +4,11 @@ Developer: Rafostar
 Extension GitHub: https://github.com/Rafostar/cast-to-tv-links-addon
 */
 const Local = imports.misc.extensionUtils.getCurrentExtension();
-const Widget = Local.imports.widget;
 
 const EXTENSIONS_PATH = Local.path.substring(0, Local.path.lastIndexOf('/'));
 const MAIN_PATH = EXTENSIONS_PATH + '/cast-to-tv@rafostar.github.com';
 const GETTEXT_DOMAIN = Local.metadata['gettext-domain'];
-const EXTENSION_ID = Local.metadata['extension-id'];
+const UUID = Local.metadata.uuid;
 
 /* Imports from main extension */
 imports.searchPath.unshift(MAIN_PATH);
@@ -24,10 +23,10 @@ function init()
 
 function enable()
 {
-	Addons.enableAddon(EXTENSION_ID, Widget);
+	Addons.enableAddon(UUID);
 }
 
 function disable()
 {
-	Addons.disableAddon(EXTENSION_ID);
+	Addons.disableAddon(UUID);
 }
