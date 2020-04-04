@@ -385,5 +385,5 @@ class linkEntry
 	}
 }
 
-GLib.mkdir_with_parents(TEMP_DIR, 493); // 755 in octal
+Helper.createDir(TEMP_DIR);
 let app = new linkEntry();
