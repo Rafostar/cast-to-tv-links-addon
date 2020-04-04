@@ -127,12 +127,7 @@ function getDownloadOpts()
 
 function mediaMerge(req, res, selection, config, isSeparate)
 {
-	var mergeOpts = [
-	'-movflags', '+empty_moov',
-	'-c:v', 'copy',
-	'-f', 'matroska',
-	'pipe:1'
-	];
+	var mergeOpts = getPlayerOptsArray(config.receiverType);
 
 	if(isSeparate)
 	{
@@ -176,4 +171,24 @@ function mediaMerge(req, res, selection, config, isSeparate)
 	req.once('close', onReqClose);
 
 	streamData.pipe(res);
+}
+
+function getPlayerOptsArray(receiverType)
+{
+	if(receiverType !== 'playercast')
+	{
+		return [
+			'-frag_duration', '1000000',
+			'-movflags', '+empty_moov',
+			'-strict', '-2',
+			'-f', 'mp4',
+			'pipe:1'
+		];
+	}
+
+	return [
+		'-movflags', '+empty_moov',
+		'-f', 'matroska',
+		'pipe:1'
+	];
 }
